@@ -1,0 +1,239 @@
+debug/
+ckpts/
+third_party/
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+third_party/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
+#   However, in case of collaboration, if having platform-specific dependencies or dependencies
+#   having no cross-platform support, pipenv may install dependencies that don't work, or not
+#   install all needed dependencies.
+#Pipfile.lock
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# Ruff
+.ruff_cache/
+
+# Auth Tokens / Hidden Files
+.hf_token
+.wandb_api_key
+.*_token
+.*api_key
+
+# IDE Caches
+.idea/
+.vscode/
+
+# Mac OS
+.DS_Store
+
+# Caches and Datasets
+cache/
+data/
+playground/Models
+=4.43.2
+
+# temp
+playground/BuildData
+
+playground/Checkpoints
+playground/Pretrained_models
+playground/Datasets
+
+eval/SimplerEnv
+
+results
+nohup.out
+*.out
+length_distribution.png
+eval/MMBench/*.jpg
+eval/*/*.jpg
+eval/*/*.png
+eval/**/*.ipynb
+# scripts
+# scripts
+bar
+eval/MMBench/*.jpeg
+eval/MMBench/play_ground_bbox.ipynb
+eval/MMBench/spatial_understanding.ipynb
+llavavla/conf/qwenvla_lmdb_genmanip.yaml
+annotated_image.png
+data_processed
+llavavla/conf/qwenvla_lmdb_3Lpretrain.yaml
+extracted_frames
+LDA/config/deepseeds/*
+**/bar
+llavavla/model/openvla_temp
+real_deployment/upload/push_model_to_hf.py
+real_deployment/deploy/*bar
+**/*.mp4
+# but allow demo video data
+!playground/demo_data/**/*.mp4
+!playground/demo_data/**/data/
+!playground/demo_data/**/*.parquet
+experiments/libero/logs/2025-08-10/17-18-26+checkpoints_steps_60000_pytorch_model.pt_s1-8_s2-16_s2cand-5_ntl-1.0_ntu-1.0_ttl-0.9_ttu-1.0/rollout_put_the_bowl_on_top_of_the_cabinet_failure.mp4
+
+**/*.log
+
+**/*.jpg
+debug_images/step1_raw.npy
+test_image.jpg
+test_image.jpg.npy
+test_image.jpg
+# scripts/*
+
+scripts/run_scripts/sum2cluter.sh
+
+examples/SimplerEnv/eval_scripts
+
+examples/Behavior
+
+examples/CoTrainVLM
+
+examples/Galbot
+
+examples/LIBERO
+
+examples/Robotwin
+
+examples/sharpa
+
+examples/unitree
+
+examples/SimplerEnv
+
+.github
+
+LDA/config/frameworks/*
+LDA/model/modules/sam_model/*
+assets/SAMv2.txt
+playground/*
+qwen_talk.md
+assets/R1Pro.py
+examples/SPVLA
+examples/SimplerEnv/eval_files/eval_scripts
+examples/Robotwin/train_files/submit_robotwin_training.sh
+LDA/dataloader/gr00t_lerobot/datasets_temp.py
+MUJOCO_LOG.TXT
+examples/MultiRobot/*
