@@ -3,7 +3,7 @@
 <div align="center">
 
 [![arXiv](https://img.shields.io/badge/arXiv-2505.03233-df2a2a.svg)]()
-[![Static Badge](https://img.shields.io/badge/Project-Page-a)](https://lda-1b.github.io/)
+[![Static Badge](https://img.shields.io/badge/Project-Page-a)](https://pku-epic.github.io/LDA/)
 [![Model](https://img.shields.io/badge/Hugging%20Face-Model-yellow)]()
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
