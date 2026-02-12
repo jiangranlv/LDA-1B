@@ -51,7 +51,7 @@ quality.
 
 ### Step 1: Clone the Repository
 ```bash
-git clone https://github.com/jiangranlv/latent-dynamics-action.git
+git clone https://github.com/jiangranlv/latent-dynamics-action.git LDA
 cd LDA
 ```
 
