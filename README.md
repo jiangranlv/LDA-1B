@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![arXiv](https://img.shields.io/badge/arXiv-2505.03233-df2a2a.svg)]()
+[![arXiv](https://img.shields.io/badge/arXiv-2505.03233-df2a2a.svg)](https://arxiv.org/abs/2602.12215)
 [![Static Badge](https://img.shields.io/badge/Project-Page-a)](https://pku-epic.github.io/LDA/)
 [![Model](https://img.shields.io/badge/Hugging%20Face-Model-yellow)]()
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
@@ -44,7 +44,7 @@ quality.
 ---
 
 ## Latest Updates
-- [2026-02-12] We publish LDA-1B, check our paper [here]().
+- [2026-02-12] We publish LDA-1B, check our paper [here](https://arxiv.org/abs/2602.12215).
 
 
 ## 🛠 Environment Setup
@@ -147,7 +147,15 @@ If you find our work useful, please cite us:
 
 
 ```
-replace with our paper 
+@misc{lyu2026lda1bscalinglatentdynamics,
+      title={LDA-1B: Scaling Latent Dynamics Action Model via Universal Embodied Data Ingestion}, 
+      author={Jiangran Lyu and Kai Liu and Xuheng Zhang and Haoran Liao and Yusen Feng and Wenxuan Zhu and Tingrui Shen and Jiayi Chen and Jiazhao Zhang and Yifei Dong and Wenbo Cui and Senmao Qi and Shuo Wang and Yixin Zheng and Mi Yan and Xuesong Shi and Haoran Li and Dongbin Zhao and Ming-Yu Liu and Zhizheng Zhang and Li Yi and Yizhou Wang and He Wang},
+      year={2026},
+      eprint={2602.12215},
+      archivePrefix={arXiv},
+      primaryClass={cs.RO},
+      url={https://arxiv.org/abs/2602.12215}, 
+}
 ```
 
 <!-- *Chart updates automatically. Click to interact with the full timeline.* -->
