@@ -39,8 +39,6 @@ quality.
 | **Data Quality Hierarchy** | High-quality teleop → policy learning; Low-quality scripted → dynamics learning; No-annotation videos → visual forecasting |
 | **Latent Dynamics Modeling** | Predicts future *latent visual features* instead of pixels → better generalization |
 | **Cross-Embodiment** | Pre-trained on multi embodiments (Agibot, Unitree-G1, Human, etc.) |
-| **Open-Loop Evaluation** | Offline assessment via action prediction error (APE) without environment interaction |
-
 ---
 
 ## Latest Updates
