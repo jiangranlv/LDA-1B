@@ -13,7 +13,7 @@ Framework_name=QwenMMDiT
 base_vlm=/path/to/pretrained/VLM
 vision_encoder_path=/path/to/pretrained/vision/encoder # should be the parent path of vision encoder ckpt
 
-freeze_module_list='qwen_vl_interface, action_model.vision_encoder' # just for fast debug, sota is under fully FT, i.g., freeze_module_list=""
+freeze_module_list='qwen_vl_interface,action_model.vision_encoder' # just for fast debug, sota is under fully FT, i.g., freeze_module_list=""
 DIT_TYPE="DiT-B"
 # freeze_module_list="qwen_vl_interface.model.model.visual,dino_encoder" # just for fast debug, sota is under fully FT, i.g., freeze_module_list=""
 

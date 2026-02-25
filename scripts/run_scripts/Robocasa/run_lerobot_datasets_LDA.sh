@@ -13,7 +13,7 @@ Framework_name=QwenMMDiT
 base_vlm=/path/to/pretrained/VLM
 vision_encoder_path=/path/to/pretrained/vision/encoder # should be the parent path of vision encoder ckpt
 
-freeze_module_list='qwen_vl_interface, action_model.vision_encoder' # if you would like to directly train on the robocasa dataset, unfreeze vlm could obtain better performance
+freeze_module_list='qwen_vl_interface,action_model.vision_encoder' # if you would like to directly train on the robocasa dataset, unfreeze vlm could obtain better performance
 DIT_TYPE="DiT-L"
 
 llavadata="asv2_conversation_en,asv2_detailed_description_en"
