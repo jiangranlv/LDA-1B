@@ -145,15 +145,13 @@ If you find our work useful, please cite us:
 
 
 ```
-@misc{lyu2026lda1bscalinglatentdynamics,
-      title={LDA-1B: Scaling Latent Dynamics Action Model via Universal Embodied Data Ingestion}, 
-      author={Jiangran Lyu and Kai Liu and Xuheng Zhang and Haoran Liao and Yusen Feng and Wenxuan Zhu and Tingrui Shen and Jiayi Chen and Jiazhao Zhang and Yifei Dong and Wenbo Cui and Senmao Qi and Shuo Wang and Yixin Zheng and Mi Yan and Xuesong Shi and Haoran Li and Dongbin Zhao and Ming-Yu Liu and Zhizheng Zhang and Li Yi and Yizhou Wang and He Wang},
-      year={2026},
-      eprint={2602.12215},
-      archivePrefix={arXiv},
-      primaryClass={cs.RO},
-      url={https://arxiv.org/abs/2602.12215}, 
+@article{lyu2026lda,
+  title={LDA-1B: Scaling Latent Dynamics Action Model via Universal Embodied Data Ingestion},
+  author={Lyu, Jiangran and Liu, Kai and Zhang, Xuheng and Liao, Haoran and Feng, Yusen and Zhu, Wenxuan and Shen, Tingrui and Chen, Jiayi and Zhang, Jiazhao and Dong, Yifei and others},
+  journal={arXiv preprint arXiv:2602.12215},
+  year={2026}
 }
+
 ```
 
 ## License
