@@ -136,7 +136,7 @@ The following features are planned for future implementation:
 
 ##  🙏 Acknowledgements
 
-Our code is built upon [starVLA](https://github.com/starVLA/starVLA) and [mmdit](https://github.com/lucidrains/mmdit). These code serve as an essential foundation for our implementation, and we deeply appreciate the time, effort, and expertise they shared with the community.  
+Our code is built upon [starVLA](https://github.com/starVLA/starVLA) and [mmdit](https://gitlab.com/lucidrains/mmdit). These code serve as an essential foundation for our implementation, and we deeply appreciate the time, effort, and expertise they shared with the community.  
 
 ## ✍️ Citation
 
