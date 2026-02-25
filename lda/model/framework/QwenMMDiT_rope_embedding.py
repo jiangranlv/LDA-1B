@@ -1,4 +1,4 @@
-# Copyright 2025 LDA community. All rights reserved.
+# Copyright 2025 lda community. All rights reserved.
 # Licensed under the MIT License, Version 1.0 (the "License");
 # Implemented by [Junqiu YU / Fudan University] in [2025]. 
 # Design and Merged by [Jinhui YE / HKUST University] in [2025].
@@ -21,18 +21,18 @@ import time
 
 
 from deployment.model_server.tools.image_tools import to_pil_preserve
-from LDA.training.trainer_utils import initialize_overwatch
+from lda.training.trainer_utils import initialize_overwatch
 
 logger = initialize_overwatch(__name__)
 
 # HuggingFace Default / LLaMa-2 IGNORE_INDEX (for labels)
 IGNORE_INDEX = -100
 
-from LDA.model.framework.base_framework import baseframework
-from LDA.model.modules.vlm import get_vlm_model
-from LDA.model.modules.action_model.MMDiT_ActionHeader_rope_embedding import get_action_model, FlowmatchingActionHead
-from LDA.training.trainer_utils.trainer_tools import resize_images
-from LDA.model.tools import FRAMEWORK_REGISTRY
+from lda.model.framework.base_framework import baseframework
+from lda.model.modules.vlm import get_vlm_model
+from lda.model.modules.action_model.MMDiT_ActionHeader_rope_embedding import get_action_model, FlowmatchingActionHead
+from lda.training.trainer_utils.trainer_tools import resize_images
+from lda.model.tools import FRAMEWORK_REGISTRY
 
 @FRAMEWORK_REGISTRY.register("QwenMMDiT_rope")
 class Qwen_MMDiT(baseframework):
@@ -291,7 +291,7 @@ if __name__ == "__main__":
     # import debugpy
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_yaml", type=str, default="./LDA/config/training/LDA_cotrain_agibot.yaml", help="Path to YAML config")
+    parser.add_argument("--config_yaml", type=str, default="./lda/config/training/lda_cotrain_agibot.yaml", help="Path to YAML config")
     args, clipargs = parser.parse_known_args()
 
     # debugpy.listen(("0.0.0.0", 10092))
@@ -333,7 +333,7 @@ if __name__ == "__main__":
 
     # # Advance: try forward model with dataloader
     # # can be fake sample， but here get from dataloader for simpler
-    # from LDA.dataloader.lerobot_datasets import get_vla_dataset, collate_fn
+    # from lda.dataloader.lerobot_datasets import get_vla_dataset, collate_fn
 
     # vla_dataset_cfg = cfg.datasets.vla_data
     # dataset = get_vla_dataset(data_cfg=vla_dataset_cfg)

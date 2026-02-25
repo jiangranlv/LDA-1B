@@ -1,6 +1,6 @@
 # Copyright 2025 NVIDIA Corp. and affiliates. All rights reserved.
 # Modified by [Junqiu YU/ Fudan University] in [2025]. 
-# Modification: [rm and add some connect adapter to match with LDA, e.g., "rm "].
+# Modification: [rm and add some connect adapter to match with lda, e.g., "rm "].
 # Action repeat is inspired by CogACT
 
 
@@ -20,15 +20,15 @@ from transformers import AutoModel, AutoImageProcessor, AutoVideoProcessor
 from einops import rearrange
 import time
 
-from LDA.model.modules.action_model.flow_matching_head.action_encoder import (
+from lda.model.modules.action_model.flow_matching_head.action_encoder import (
     SinusoidalPositionalEncoding,
     swish,
 )
 
-from LDA.model.modules.action_model.flow_matching_head.mmdit.mmdit.mmdit_cross_attn_uwm import MMDiT as DiT
-from LDA.model.modules.dinov3_vit import DINOv3ViTModel
-from LDA.model.modules.action_model.UWM.transforms import VAEDownsample, VideoTransform
-from LDA.model.modules.action_model.UWM.vision import ViTImageEncoder
+from lda.model.modules.action_model.flow_matching_head.mmdit.mmdit.mmdit_cross_attn_uwm import MMDiT as DiT
+from lda.model.modules.dinov3_vit import DINOv3ViTModel
+from lda.model.modules.action_model.UWM.transforms import VAEDownsample, VideoTransform
+from lda.model.modules.action_model.UWM.vision import ViTImageEncoder
 # TODO try to meger DiT Modules with follow_match_head, they are just the same arch, but diff loss, use diffusers package will be simple
 def print_gpu_memory_usage(prefix=""):
     if torch.cuda.is_available():
@@ -460,7 +460,7 @@ class FlowmatchingActionHead(nn.Module):
         self.inner_dim = action_model_cfg["num_attention_heads"] * action_model_cfg["attention_head_dim"]
         # self.img_size = config.img_shape
 
-        # LDA only support single embodiment, if use multi embodiment, replace with multiMLP
+        # lda only support single embodiment, if use multi embodiment, replace with multiMLP
 
         self.state_encoder = MLP(
                 input_dim=config.state_dim,

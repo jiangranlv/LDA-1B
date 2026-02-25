@@ -8,10 +8,10 @@ import pickle
 from pathlib import Path
 from torch.utils.data import Dataset
 
-from LDA.dataloader.gr00t_lerobot.video import get_all_frames, get_frames_by_timestamps
-from LDA.dataloader.gr00t_lerobot.transform import ComposedModalityTransform
-from LDA.dataloader.gr00t_lerobot.embodiment_tags import ROBOT_TYPE_TO_EMBODIMENT_TAG, EmbodimentTag
-from LDA.dataloader.gr00t_lerobot.datasets import LeRobotMixtureDataset
+from lda.dataloader.gr00t_lerobot.video import get_all_frames, get_frames_by_timestamps
+from lda.dataloader.gr00t_lerobot.transform import ComposedModalityTransform
+from lda.dataloader.gr00t_lerobot.embodiment_tags import ROBOT_TYPE_TO_EMBODIMENT_TAG, EmbodimentTag
+from lda.dataloader.gr00t_lerobot.datasets import LeRobotMixtureDataset
 
 def build_metadata_cache(video_paths, cache_path="metadata.pkl"):
     metadata = {}
@@ -196,8 +196,8 @@ class VideoTaskSingleDataset(Dataset):
 
 if __name__ == "__main__":
     # debug code
-    from LDA.dataloader.gr00t_lerobot.data_config import EgoCentric10KDataConfig
-    from LDA.dataloader.lerobot_datasets import make_LeRobotSingleDataset
+    from lda.dataloader.gr00t_lerobot.data_config import EgoCentric10KDataConfig
+    from lda.dataloader.lerobot_datasets import make_LeRobotSingleDataset
     data_config = EgoCentric10KDataConfig()
     modality_configs = data_config.modality_config()
     embodiment_tag = EmbodimentTag.EGOCENTRIC_10K

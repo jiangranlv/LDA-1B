@@ -9,8 +9,8 @@ Provides:
   - ActionModel: wraps diffusion process (training + optional DDIM sampling creation)
 """
 
-from LDA.model.modules.action_model.DiT_modules.models import DiT
-from LDA.model.modules.action_model import create_diffusion
+from lda.model.modules.action_model.DiT_modules.models import DiT
+from lda.model.modules.action_model import create_diffusion
 from .DiT_modules import gaussian_diffusion as gd
 
 import torch

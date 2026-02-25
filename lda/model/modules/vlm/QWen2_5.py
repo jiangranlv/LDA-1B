@@ -1,4 +1,4 @@
-# Copyright 2025 LDA community. All rights reserved.
+# Copyright 2025 lda community. All rights reserved.
 # Licensed under the MIT License, Version 1.0 (the "License"); 
 # Implemented by [Jinhui YE / HKUST University] in [2025].
 
@@ -27,7 +27,7 @@ DEFAULT_IMAGE_TOKEN = "<image>"
 DEFAULT_VIDEO_TOKEN = "<video>"
 
 _ACTION_TOKEN_MIN = 151665 # how can we know this range?
-_ACTION_TOKEN_MAX = 153712 # here only for fast_tokenizer, see LDA/model/modules/vlm/tools/add_qwen_special_tokens/README.md
+_ACTION_TOKEN_MAX = 153712 # here only for fast_tokenizer, see lda/model/modules/vlm/tools/add_qwen_special_tokens/README.md
 
 
 import torch.nn as nn
@@ -270,7 +270,7 @@ class _QWen_VL_Interface(nn.Module):
         # if solutions, mask out the non solution tokens in labels --> @JinhuiYE can we mask out system prompt?
         if solutions is not None:
             action_token_min = _ACTION_TOKEN_MIN # how can we know this range? --> we has other way for this, but is slower see qwenhelix branch
-            action_token_max = _ACTION_TOKEN_MAX # here only for fast_tokenizer, see LDA/model/modules/vlm/tools/add_qwen_special_tokens/README.md
+            action_token_max = _ACTION_TOKEN_MAX # here only for fast_tokenizer, see lda/model/modules/vlm/tools/add_qwen_special_tokens/README.md
             labels = batch_input['input_ids'].clone()
             # For each sequence in the batch, find the first occurrence of an action token.
             for i in range(labels.size(0)):
@@ -285,7 +285,7 @@ class _QWen_VL_Interface(nn.Module):
                 else:
                     # If no action token is found, mask the entire sequence.
                     seq[:] = IGNORE_INDEX
-                    RuntimeWarning (f"action token are on in yout tokenizer, plz see LDA/model/modules/vlm/tools/add_qwen_special_tokens/README.md.")
+                    RuntimeWarning (f"action token are on in yout tokenizer, plz see lda/model/modules/vlm/tools/add_qwen_special_tokens/README.md.")
             
             labels[labels == self.processor.tokenizer.pad_token_id] = -100 ## mask out pad tokens as well
             batch_input['labels'] = labels
@@ -299,7 +299,7 @@ if __name__ == "__main__":
     import debugpy
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_yaml", type=str, default="./LDA/config/training/LDA_cotrain_oxe.yaml", help="Path to YAML config")
+    parser.add_argument("--config_yaml", type=str, default="./lda/config/training/lda_cotrain_oxe.yaml", help="Path to YAML config")
     args, clipargs = parser.parse_known_args()
 
     debugpy.listen(("0.0.0.0", 10092))

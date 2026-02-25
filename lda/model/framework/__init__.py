@@ -4,7 +4,7 @@ Automatically builds registered framework implementations
 based on configuration.
 
 Each framework module (e.g., M1.py, QwenFast.py) should register itself:
-    from LDA.model.framework.framework_registry import FRAMEWORK_REGISTRY
+    from lda.model.framework.framework_registry import FRAMEWORK_REGISTRY
 
     @FRAMEWORK_REGISTRY.register("InternVLA-M1")
     def build_model_framework(config):
@@ -13,9 +13,9 @@ Each framework module (e.g., M1.py, QwenFast.py) should register itself:
 
 import pkgutil
 import importlib
-from LDA.model.tools import FRAMEWORK_REGISTRY
+from lda.model.tools import FRAMEWORK_REGISTRY
 
-from LDA.training.trainer_utils import initialize_overwatch
+from lda.training.trainer_utils import initialize_overwatch
 
 logger = initialize_overwatch(__name__)
 
@@ -46,13 +46,13 @@ def build_framework(cfg):
         cfg.framework.name = cfg.framework.framework_py  # Backward compatibility for legacy config yaml
         
     if cfg.framework.name == "QwenOFT":
-        from LDA.model.framework.QwenOFT import Qwenvl_OFT
+        from lda.model.framework.QwenOFT import Qwenvl_OFT
         return Qwenvl_OFT(cfg)
     elif cfg.framework.name == "QwenFast":
-        from LDA.model.framework.QwenFast import Qwenvl_Fast
+        from lda.model.framework.QwenFast import Qwenvl_Fast
         return Qwenvl_Fast(cfg)
     elif cfg.framework.name == "QwenGR00T_single_t":
-        from LDA.model.framework.QwenGR00T_single_t_concat_curr_obs import Qwen_GR00T
+        from lda.model.framework.QwenGR00T_single_t_concat_curr_obs import Qwen_GR00T
         return Qwen_GR00T(cfg)
 
     # auto detect from registry

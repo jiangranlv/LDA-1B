@@ -3,7 +3,7 @@ run_root_dir: results/Checkpoints
 seed: 42
 trackers: [jsonl, wandb]
 wandb_entity: your_wandb_entity
-wandb_project: LDA
+wandb_project: lda
 is_debug: false
 
 framework:

@@ -21,16 +21,16 @@ from mpl_toolkits.mplot3d import Axes3D
 import os
 import imageio
 
-from LDA.dataloader.gr00t_lerobot.datasets import LeRobotSingleDataset
-from LDA.model.framework.base_framework import baseframework
+from lda.dataloader.gr00t_lerobot.datasets import LeRobotSingleDataset
+from lda.model.framework.base_framework import baseframework
 import h5py
 import torch
 from pytorch3d.transforms import euler_angles_to_matrix
 # numpy print precision settings 3, dont use exponential notation
 
-from LDA.utils.rotation_convert import delta2abs, calculate_delta_eef
-from LDA.dataloader.lerobot_datasets import collate_fn
-from LDA.utils.eval_relative_eef import create_action_trajectory_video
+from lda.utils.rotation_convert import delta2abs, calculate_delta_eef
+from lda.dataloader.lerobot_datasets import collate_fn
+from lda.utils.eval_relative_eef import create_action_trajectory_video
 
 AXIS_COLORS = ((255, 0, 0), (0, 255, 0), (0, 0, 255))
 PIXEL_EPS = 1e-9

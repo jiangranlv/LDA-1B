@@ -1,10 +1,10 @@
-# Copyright 2025 LDA community. All rights reserved.
+# Copyright 2025 lda community. All rights reserved.
 # Licensed under the MIT License, Version 1.0 (the "License"); 
 # Implemented by [Jinhui YE / HKUST University] in [2025].
 
 
 """
-LDA’s trainer is built directly on native PyTorch + Accelerate + DeepSpeed, keeping the loop explicit and easy to hack.
+lda’s trainer is built directly on native PyTorch + Accelerate + DeepSpeed, keeping the loop explicit and easy to hack.
 Conventions:
 1. Store runtime state in dicts where possible (simplifies data info, procesing info, config, etc).  
 2. Use multiple dataloaders to adapt heterogeneous data types / task mixtures.  
@@ -21,6 +21,7 @@ from torch.utils.data import Dataset, DataLoader
 import numpy as np
 import time
 import re
+import gc
 
 # Third-Party Libraries
 import torch
@@ -35,11 +36,11 @@ from tqdm import tqdm
 from transformers import AutoProcessor, get_scheduler
 
 # Local Modules
-from LDA.training.trainer_utils.trainer_tools import normalize_dotlist_args
-from LDA.model.framework import build_framework
-from LDA.training.trainer_utils.trainer_tools import TrainerUtils
-from LDA.training.trainer_utils.trainer_tools import build_param_lr_groups
-from LDA.training.trainer_utils.config_tracker import wrap_config, AccessTrackedConfig
+from lda.training.trainer_utils.trainer_tools import normalize_dotlist_args
+from lda.model.framework import build_framework
+from lda.training.trainer_utils.trainer_tools import TrainerUtils
+from lda.training.trainer_utils.trainer_tools import build_param_lr_groups
+from lda.training.trainer_utils.config_tracker import wrap_config, AccessTrackedConfig
 
 deepspeed_plugin = DeepSpeedPlugin()
 accelerator = Accelerator(deepspeed_plugin=deepspeed_plugin)
@@ -48,6 +49,8 @@ accelerator.print(accelerator.state)
 # Sane Defaults
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
+local_rank = int(os.environ.get("LOCAL_RANK", 0))
+torch.cuda.set_device(local_rank)
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 from accelerate.logging import get_logger
@@ -83,7 +86,7 @@ def build_model(cfg) -> torch.nn.Module:
 
 
 # here changes need to 📦 encapsulate Dataloader
-from LDA.dataloader import build_dataloader, build_multi_task_dataloader
+from lda.dataloader import build_dataloader, build_multi_task_dataloader
 
 def prepare_data(cfg, accelerator, output_dir) -> Tuple[DataLoader, DataLoader]:
     """prepare training data"""
@@ -383,6 +386,7 @@ class VLATrainer(TrainerUtils):
             t_start_model = time.perf_counter()
             step_metrics = self._train_step(batch_vla)
             t_end_model = time.perf_counter()
+            del batch_vla 
 
             # update progress
             if self.accelerator.sync_gradients:
@@ -396,7 +400,6 @@ class VLATrainer(TrainerUtils):
                             "model_times": f"{t_end_model - t_start_model:.3f}",
                         }
                     )
-
             # evaluate model
             if self.completed_steps % self.config.trainer.eval_interval == 0:
                 step_metrics = self.eval_action_model(step_metrics)
@@ -405,11 +408,10 @@ class VLATrainer(TrainerUtils):
             step_metrics["data_time"] = t_end_data - t_start_data
             step_metrics["model_time"] = t_end_model - t_start_model
             self._log_metrics(step_metrics)
-
+            del step_metrics
             # save checkpoint
             if self.completed_steps % self.config.trainer.save_interval == 0 and self.completed_steps > 0:
                 self._save_checkpoint()
-
             # check termination condition
             if self.completed_steps >= self.config.trainer.max_train_steps:
                 break
@@ -427,38 +429,42 @@ class VLATrainer(TrainerUtils):
         :param metric_fn: Function to compute the distance between predicted and ground truth actions.
         :return: Average metric score across the evaluation dataset.
         """
+        self.model.eval()
+        with torch.no_grad():
+            batch_policy, batch_fd, batch_vg, batch_id = self._get_next_batch()
+            for d in batch_policy:
+                d['assigned_task'] = "policy"
+            for d in batch_fd:
+                d['assigned_task'] = "forward_dynamics"
+            for d in batch_vg:
+                d['assigned_task'] = "video_gen"
+            for d in batch_id:
+                d['assigned_task'] = "inverse_dynamics"
+            examples = batch_policy + batch_fd + batch_vg + batch_id
+            del batch_policy, batch_fd, batch_vg, batch_id
+            score = 0.0
+            num_samples = len(examples)
+            actions = [example["action"] for example in examples]  # label
+            # Predict actions using the model
+            output_dict = self.model.predict_action(
+                examples=examples, use_ddim=True, num_ddim_steps=20
+            )
 
-        batch_policy, batch_fd, batch_vg, batch_id = self._get_next_batch()
-        for d in batch_policy:
-            d['assigned_task'] = "policy"
-        for d in batch_fd:
-            d['assigned_task'] = "forward_dynamics"
-        for d in batch_vg:
-            d['assigned_task'] = "video_gen"
-        for d in batch_id:
-            d['assigned_task'] = "inverse_dynamics"
-        examples = batch_policy + batch_fd + batch_vg + batch_id
-        del batch_policy, batch_fd, batch_vg, batch_id
-        score = 0.0
-        num_samples = len(examples)
-        actions = [example["action"] for example in examples]  # label
-        # Predict actions using the model
-        output_dict = self.model.predict_action(
-            examples=examples, use_ddim=True, num_ddim_steps=20
-        )
+            if self.accelerator.is_main_process:
+                normalized_actions = output_dict["normalized_actions"]  # B, T, D
+                if isinstance(normalized_actions, torch.Tensor):
+                    normalized_actions = normalized_actions.detach().cpu().numpy()
+                actions = np.array(actions)  # convert actions to numpy.ndarray
+                # B, Chunk, dim = actions.shape
+                num_pots = np.prod(actions.shape)
+                # Compute the metric score
+                score = TrainerUtils.euclidean_distance(normalized_actions, actions)
+                average_score = score / num_pots
+                step_metrics["mse_score"] = average_score
 
-        if self.accelerator.is_main_process:
-            normalized_actions = output_dict["normalized_actions"]  # B, T, D
-            actions = np.array(actions)  # convert actions to numpy.ndarray
-            # B, Chunk, dim = actions.shape
-            num_pots = np.prod(actions.shape)
-            # Compute the metric score
-            score = TrainerUtils.euclidean_distance(normalized_actions, actions)
-            average_score = score / num_pots
-            step_metrics["mse_score"] = average_score
-
-        del examples
+            del examples, output_dict
         dist.barrier()  # ensure all processes are synchronized
+        self.model.train()
         return step_metrics
 
     def _log_training_config(self):
@@ -472,40 +478,41 @@ class VLATrainer(TrainerUtils):
 
     def _train_step(self, batch_vla, batch_vlm=None):
         """execute single training step"""
-        with self.accelerator.accumulate(self.model):
-            self.optimizer.zero_grad()
+        try:
+            with self.accelerator.accumulate(self.model):
+                self.optimizer.zero_grad()
 
-            # VLA task forward propagation
-            with torch.autocast("cuda", dtype=torch.bfloat16):
-                output_dict = self.model.forward(batch_vla)
+                # VLA task forward propagation
+                with torch.autocast("cuda", dtype=torch.bfloat16):
+                    output_dict = self.model.forward(batch_vla)
 
-                action_loss = output_dict["action_loss"]
-                if "dynamics_loss" in output_dict.keys():
-                    dynamics_loss = output_dict["dynamics_loss"]
+                    action_loss = output_dict["action_loss"]
                     total_loss = output_dict["loss"]
-                else:
-                    total_loss = action_loss
+                    if "dynamics_loss" in output_dict.keys():
+                        dynamics_loss = output_dict["dynamics_loss"]
 
-            # VLA backward propagation
-            self.accelerator.backward(total_loss)
+                # VLA backward propagation
+                self.accelerator.backward(total_loss)
 
-            # gradient clipping
-            if self.config.trainer.gradient_clipping is not None:
-                self.accelerator.clip_grad_norm_(self.model.parameters(), self.config.trainer.gradient_clipping)
+                # gradient clipping
+                if self.config.trainer.gradient_clipping is not None:
+                    self.accelerator.clip_grad_norm_(self.model.parameters(), self.config.trainer.gradient_clipping)
 
-            # optimizer step
-            self.optimizer.step()
-            self.lr_scheduler.step()
-        if "dynamics_loss" in output_dict.keys():
-            return {
-                "action_dit_loss": action_loss.item(),
-                "dynamics_loss": dynamics_loss.item(),
-                "loss": total_loss.item()
-            }
-        else:
-            return {
-                "action_dit_loss": action_loss.item(),
-            }
+                # optimizer step
+                self.optimizer.step()
+                self.lr_scheduler.step()
+            if "dynamics_loss" in output_dict.keys():
+                return {
+                    "action_dit_loss": action_loss.cpu().item(),
+                    "dynamics_loss": dynamics_loss.cpu().item(),
+                    "loss": total_loss.detach().cpu().item()
+                }
+            else:
+                return {
+                    "action_dit_loss": action_loss.cpu().item(),
+                }
+        finally:
+            del output_dict
 
     def _finalize_training(self):
         """training end processing"""
@@ -569,7 +576,7 @@ def main(cfg) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_yaml", type=str, default="LDA/config/training/LDA_cotrain_oxe.yaml", help="Path to YAML config")
+    parser.add_argument("--config_yaml", type=str, default="lda/config/training/lda_cotrain_oxe.yaml", help="Path to YAML config")
     args, clipargs = parser.parse_known_args()
 
     # Load YAML config & Convert CLI overrides to dotlist config

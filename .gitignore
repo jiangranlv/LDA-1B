@@ -182,7 +182,7 @@ annotated_image.png
 data_processed
 llavavla/conf/qwenvla_lmdb_3Lpretrain.yaml
 extracted_frames
-LDA/config/deepseeds/*
+lda/config/deepseeds/*
 **/bar
 llavavla/model/openvla_temp
 real_deployment/upload/push_model_to_hf.py
@@ -205,6 +205,8 @@ test_image.jpg
 
 scripts/run_scripts/sum2cluter.sh
 
+scripts/run_scripts/pretrain/*
+
 examples/SimplerEnv/eval_scripts
 
 examples/Behavior
@@ -225,15 +227,14 @@ examples/SimplerEnv
 
 .github
 
-LDA/config/frameworks/*
-LDA/model/modules/sam_model/*
+lda/config/frameworks/*
+lda/model/modules/sam_model/*
 assets/SAMv2.txt
-playground/*
 qwen_talk.md
 assets/R1Pro.py
 examples/SPVLA
 examples/SimplerEnv/eval_files/eval_scripts
 examples/Robotwin/train_files/submit_robotwin_training.sh
-LDA/dataloader/gr00t_lerobot/datasets_temp.py
+lda/dataloader/gr00t_lerobot/datasets_temp.py
 MUJOCO_LOG.TXT
 examples/MultiRobot/*

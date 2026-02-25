@@ -1,14 +1,14 @@
-# LDA Evaluation Framework Usage Guide
+# lda Evaluation Framework Usage Guide
 
 ## 1. Overview
-LDA standardizes the inference pipeline for real-robot or simulation evaluations by tunneling data through WebSocket, enabling new models to be integrated into existing evaluation environments with minimal changes.
+lda standardizes the inference pipeline for real-robot or simulation evaluations by tunneling data through WebSocket, enabling new models to be integrated into existing evaluation environments with minimal changes.
 
 
 
 ## 2. Architecture Diagram
 
 
-The LDA framework uses a client-server architecture to separate the Evaluation Environment (Client) from the Policy Server (Model).
+The lda framework uses a client-server architecture to separate the Evaluation Environment (Client) from the Policy Server (Model).
 
 
 <details close>
@@ -16,7 +16,7 @@ The LDA framework uses a client-server architecture to separate the Evaluation E
 
 | Component             | Color Code | Description                                                                 |
 |-----------------------|------------|-----------------------------------------------------------------------------|
-| Sim / Real Controller | Grey       | External to LDA: Contains the core loop of the evaluation environment or robot controller, handling observation collection (`get_obs()`) and action execution (`apply_action()`). |
+| Sim / Real Controller | Grey       | External to lda: Contains the core loop of the evaluation environment or robot controller, handling observation collection (`get_obs()`) and action execution (`apply_action()`). |
 | PolicyClient.py & WebSocket & PolicyServer      | Blue       | Standard Communication Flow: Client-side wrapper responsible for data transmission (tunneling) and interfacing the environment with the server. |
 | Framework.py          | Orange     | Model Infer Core: Contains the user-defined model inference function (`Framework.predict_action`), which is the main logic for generating actions. |
 
@@ -56,7 +56,7 @@ while True:
 
 ### PolicyClient Interface Design
 
-![](../assets/LDA_PolicyInterface.png)
+![](../assets/lda_PolicyInterface.png)
 
 
 The [`*2model_interface.py`](./LIBERO/eval_files/model2libero_client.py) interface is designed to wrap and abstract any variations originating from the simulation or real-world environment. It also supports user-defined controllers, such as converting delta actions to absolute joint positions.

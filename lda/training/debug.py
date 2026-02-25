@@ -1,9 +1,9 @@
-# Copyright 2025 LDA community. All rights reserved.
+# Copyright 2025 lda community. All rights reserved.
 # Licensed under the MIT License, Version 1.0 (the "License"); 
 # Implemented by [Jinhui YE / HKUST University] in [2025].
 
 """
-LDA Single-GPU Debug Trainer (Pure PyTorch)
+lda Single-GPU Debug Trainer (Pure PyTorch)
 - Zero dependency on Accelerate/DeepSpeed/Distributed
 - Pure native PyTorch implementation
 - Enhanced debugging features (NaN checks, gradient inspection, etc.)
@@ -32,11 +32,11 @@ from tqdm import tqdm
 from transformers import get_scheduler
 
 # Local Modules
-from LDA.training.trainer_utils.trainer_tools import normalize_dotlist_args
-from LDA.model.framework import build_framework
-from LDA.training.trainer_utils.trainer_tools import TrainerUtils
-from LDA.training.trainer_utils.trainer_tools import build_param_lr_groups
-from LDA.training.trainer_utils.config_tracker import wrap_config, AccessTrackedConfig
+from lda.training.trainer_utils.trainer_tools import normalize_dotlist_args
+from lda.model.framework import build_framework
+from lda.training.trainer_utils.trainer_tools import TrainerUtils
+from lda.training.trainer_utils.trainer_tools import build_param_lr_groups
+from lda.training.trainer_utils.config_tracker import wrap_config, AccessTrackedConfig
 
 # Setup logging
 import logging
@@ -91,7 +91,7 @@ def prepare_data(cfg) -> Tuple:
         cfg.trainer.max_train_steps = min(50, cfg.trainer.max_train_steps)
         logger.warning(f"⚠️ DEBUG MODE: batch_size={cfg.datasets.vla_data.per_device_batch_size}, max_steps={cfg.trainer.max_train_steps}")
 
-    from LDA.dataloader import build_dataloader, build_multi_task_dataloader
+    from lda.dataloader import build_dataloader, build_multi_task_dataloader
     
     if cfg.framework.name == "QwenGR00T":
         vla_train_dataloader = build_dataloader(
@@ -460,7 +460,7 @@ class VLATrainer(TrainerUtils):
 
 
 def main(cfg) -> None:
-    logger.info("🚀 Starting LDA Single-GPU Debug Trainer (Pure PyTorch)")
+    logger.info("🚀 Starting lda Single-GPU Debug Trainer (Pure PyTorch)")
     
     # Wrap config
     cfg = wrap_config(cfg)
@@ -512,8 +512,8 @@ def main(cfg) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="LDA Single-GPU Debug Trainer (Pure PyTorch)")
-    parser.add_argument("--config_yaml", type=str, default="LDA/config/training/LDA_cotrain_oxe.yaml")
+    parser = argparse.ArgumentParser(description="lda Single-GPU Debug Trainer (Pure PyTorch)")
+    parser.add_argument("--config_yaml", type=str, default="lda/config/training/lda_cotrain_oxe.yaml")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode")
     parser.add_argument("--attach_debugger", action="store_true", help="Wait for debugger attach (port 5678)")
     args, unknown = parser.parse_known_args()

@@ -9,13 +9,13 @@ from pathlib import Path
 from typing import Sequence
 from omegaconf import OmegaConf
 
-from LDA.dataloader.gr00t_lerobot.datasets import LeRobotSingleDataset, LeRobotMixtureDataset
-from LDA.dataloader.gr00t_lerobot.video_gen_datasets import VideoTaskSingleDataset
-from LDA.dataloader.gr00t_lerobot.mixtures import get_dataset_mixtures
-from LDA.dataloader.gr00t_lerobot.data_config import ROBOT_TYPE_CONFIG_MAP
-from LDA.dataloader.gr00t_lerobot.embodiment_tags import ROBOT_TYPE_TO_EMBODIMENT_TAG, EmbodimentTag
+from lda.dataloader.gr00t_lerobot.datasets import LeRobotSingleDataset, LeRobotMixtureDataset
+from lda.dataloader.gr00t_lerobot.video_gen_datasets import VideoTaskSingleDataset
+from lda.dataloader.gr00t_lerobot.mixtures import get_dataset_mixtures
+from lda.dataloader.gr00t_lerobot.data_config import ROBOT_TYPE_CONFIG_MAP
+from lda.dataloader.gr00t_lerobot.embodiment_tags import ROBOT_TYPE_TO_EMBODIMENT_TAG, EmbodimentTag
 TRAINING_TASKS = ["policy", "forward_dynamics", "inverse_dynamics", "video_gen"]
-VIDEOGEN_DATASET = ["egocentric_10k", "taste_rob"]
+VIDEOGEN_DATASET = ["egocentric_10k", "taste_rob", "rh20t"]
 def collate_fn(batch):
     return batch
 def collate_fn_Qwen2_5(batch, processor):
@@ -226,13 +226,13 @@ if __name__ == "__main__":
     import debugpy
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_yaml", type=str, default="./LDA/config/training/LDA_cotrain_behavior.yaml", help="Path to YAML config")
+    parser.add_argument("--config_yaml", type=str, default="./lda/config/training/lda_cotrain_behavior.yaml", help="Path to YAML config")
     args, clipargs = parser.parse_known_args()
 
     debugpy.listen(("0.0.0.0", 10092))
     print("🔍 Rank 0 waiting for debugger attach on port 10092...")
     debugpy.wait_for_client()
-    args.config_yaml = "./examples/MultiRobot/train_files/LDA_cotrain_multiRobot.yaml"
+    args.config_yaml = "./examples/MultiRobot/train_files/lda_cotrain_multiRobot.yaml"
     cfg = OmegaConf.load(args.config_yaml)
     # cfg.datasets.vla_data.data_mix = "robotwin"
     vla_dataset_cfg = cfg.datasets.vla_data

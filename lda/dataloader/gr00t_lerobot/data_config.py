@@ -5,15 +5,15 @@
 
 from abc import ABC, abstractmethod
 
-from LDA.dataloader.gr00t_lerobot.datasets import ModalityConfig
-from LDA.dataloader.gr00t_lerobot.transform.base import ComposedModalityTransform, ModalityTransform
-from LDA.dataloader.gr00t_lerobot.transform.concat import ConcatTransform
-from LDA.dataloader.gr00t_lerobot.transform.state_action import (
+from lda.dataloader.gr00t_lerobot.datasets import ModalityConfig
+from lda.dataloader.gr00t_lerobot.transform.base import ComposedModalityTransform, ModalityTransform
+from lda.dataloader.gr00t_lerobot.transform.concat import ConcatTransform
+from lda.dataloader.gr00t_lerobot.transform.state_action import (
     StateActionSinCosTransform,
     StateActionToTensor,
     StateActionTransform,
 )
-from LDA.dataloader.gr00t_lerobot.transform.video import (
+from lda.dataloader.gr00t_lerobot.transform.video import (
     VideoColorJitter,
     VideoCrop,
     VideoResize,
@@ -579,6 +579,9 @@ class RobomindDataConfig(BaseDataConfig):
 class Challange2025DataConfig(BaseDataConfig):
     pass
 
+class RH20TDataConfig(BaseDataConfig):
+    pass
+
 # Human Data Config
 class VitraDataConfig(HumanBaseDataConfig):
     pass
@@ -614,6 +617,7 @@ class seasmallDataConfig(HumanBaseDataConfig):
     video_backend = "torchvision_av"
 
 class TacoDataConfig(HumanBaseDataConfig):
+    video_backend = "torchvision_av"
     state_keys = [
         "state.left_eef_position",
         "state.left_eef_rotation",
@@ -634,8 +638,6 @@ class TASTE_robDataConfig(HumanBaseDataConfig):
         "future_video.top_head"
     ]
     language_keys = ["annotation.language.action_text"]
-    observation_indices = [-5, 0]
-    future_observation_indices = [5]
 
 
     def modality_config(self):
@@ -673,8 +675,6 @@ class TASTE_robDataConfig(HumanBaseDataConfig):
             # VideoToNumpy(apply_to=self.video_keys),
             # state transforms
             StateActionToTensor(apply_to=self.state_keys),
-            # action transforms
-            StateActionToTensor(apply_to=self.action_keys),
             # concat transforms
             # ConcatTransform(
             #     video_concat_order=self.video_keys,
@@ -685,7 +685,7 @@ class TASTE_robDataConfig(HumanBaseDataConfig):
         return ComposedModalityTransform(transforms=transforms)
 
 
-class EgoCentric10KDataConfig:
+class EgoCentric10KDataConfig(HumanBaseDataConfig):
     video_backend = "decord"
     target_fps = 10
     video_keys = ["video.top_head"]
@@ -699,9 +699,6 @@ class EgoCentric10KDataConfig:
         "action.qpos",
     ]
     language_keys = ["annotation.language.action_text"]
-    observation_indices = [-5, 0]
-    future_observation_indices = [5]
-    action_indices = list(range(16)) # not used
 
 
     def modality_config(self):
@@ -717,18 +714,12 @@ class EgoCentric10KDataConfig:
             delta_indices=self.observation_indices,
             modality_keys=self.state_keys,
         )
-        action_modality = ModalityConfig(
-            delta_indices=self.action_indices,
-            modality_keys=self.action_keys,
-        )
         language_modality = ModalityConfig(
             delta_indices=self.observation_indices,
             modality_keys=self.language_keys,
         )
         modality_configs = {
             "video": video_modality,
-            "state": state_modality,
-            "action": action_modality,
             "language": language_modality,
             "future_video": future_video_modality,
         }
@@ -750,8 +741,6 @@ class EgoCentric10KDataConfig:
             # VideoToNumpy(apply_to=self.video_keys),
             # state transforms
             StateActionToTensor(apply_to=self.state_keys),
-            # action transforms
-            StateActionToTensor(apply_to=self.action_keys),
             # concat transforms
             # ConcatTransform(
             #     video_concat_order=self.video_keys,
@@ -886,6 +875,7 @@ ROBOT_TYPE_CONFIG_MAP = {
     "taste_rob": TASTE_robDataConfig(),
     "egocentric_10k": EgoCentric10KDataConfig(),
     "vitra": VitraDataConfig(),
+    "rh20t": RH20TDataConfig(),
 
     "demo_data": DemoDataConfig(),
 }

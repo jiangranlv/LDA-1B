@@ -1,4 +1,4 @@
-# Copyright 2025 LDA community. All rights reserved.
+# Copyright 2025 lda community. All rights reserved.
 # Licensed under the MIT License, Version 1.0 (the "License");
 # Implemented by [Jinhui YE / HKUST University] in [2025]. 
 
@@ -14,7 +14,7 @@ Key Points:
   - Autoregressive action tokens derived from discretized / symbolized continuous actions
 
 Note: How to add special tokens to Qwen2.5:
-  download our model checkpoint with special tokens added: https://huggingface.co/LDA/Qwen2.5-VL-3B-Instruct-Action
+  download our model checkpoint with special tokens added: https://huggingface.co/lda/Qwen2.5-VL-3B-Instruct-Action
 """
 
 from typing import List
@@ -28,8 +28,8 @@ from PIL import Image
 from qwen_vl_utils import process_vision_info
 
 
-from LDA.training.trainer_utils import initialize_overwatch
-from LDA.model.tools import FRAMEWORK_REGISTRY
+from lda.training.trainer_utils import initialize_overwatch
+from lda.model.tools import FRAMEWORK_REGISTRY
 from deployment.model_server.tools.image_tools import to_pil_preserve
 
 logger = initialize_overwatch(__name__)
@@ -37,9 +37,9 @@ logger = initialize_overwatch(__name__)
 # HuggingFace Default / LLaMa-2 IGNORE_INDEX (for labels)
 IGNORE_INDEX = -100
 
-from LDA.model.framework.base_framework import baseframework
-from LDA.model.modules.vlm import get_vlm_model
-from LDA.model.modules.action_model.fast_ActionHeader import get_action_model
+from lda.model.framework.base_framework import baseframework
+from lda.model.modules.vlm import get_vlm_model
+from lda.model.modules.action_model.fast_ActionHeader import get_action_model
 
 
 @FRAMEWORK_REGISTRY.register("QwenFast")
@@ -234,13 +234,13 @@ if __name__ == "__main__":
     import debugpy
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_yaml", type=str, default="./LDA/config/training/LDA_cotrain_oxe.yaml", help="Path to YAML config")
+    parser.add_argument("--config_yaml", type=str, default="./lda/config/training/lda_cotrain_oxe.yaml", help="Path to YAML config")
     args, clipargs = parser.parse_known_args()
 
     debugpy.listen(("0.0.0.0", 10092))
     print("🔍 Rank 0 waiting for debugger attach on port 10092...")
     debugpy.wait_for_client()
-    args.config_yaml = "./examples/Robotwin/train_files/LDA_cotrain_robotwin.yaml"
+    args.config_yaml = "./examples/Robotwin/train_files/lda_cotrain_robotwin.yaml"
     cfg = OmegaConf.load(args.config_yaml)
     # cfg.framework.qwenvl.base_vlm = "./playground/Pretrained_models/Qwen3-VL-4B-Instruct-Action"
 
@@ -282,7 +282,7 @@ if __name__ == "__main__":
 
     # # test with dataloader
     # # can be fake sample， but here get from dataloader for simpler
-    from LDA.dataloader.lerobot_datasets import get_vla_dataset, collate_fn
+    from lda.dataloader.lerobot_datasets import get_vla_dataset, collate_fn
 
     vla_dataset_cfg = cfg.datasets.vla_data
     vla_dataset_cfg.video_backend = "torchvision_av"

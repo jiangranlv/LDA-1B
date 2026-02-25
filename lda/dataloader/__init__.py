@@ -7,8 +7,8 @@ import numpy as np
 import torch.distributed as dist
 from pathlib import Path
 from functools import partial
-from LDA.dataloader.vlm_datasets import make_vlm_dataloader
-from LDA.dataloader.lerobot_datasets import get_vla_dataset, collate_fn, collate_fn_Qwen2_5, collate_fn_Qwen3
+from lda.dataloader.vlm_datasets import make_vlm_dataloader
+from lda.dataloader.lerobot_datasets import get_vla_dataset, collate_fn, collate_fn_Qwen2_5, collate_fn_Qwen3
 TRAINING_TASKS = ["policy", "forward_dynamics", "inverse_dynamics", "video_gen"]
 logger = get_logger(__name__)
 
@@ -68,7 +68,7 @@ def build_multi_task_dataloader(cfg, dataset_py="lerobot_datasets_oxe"): # TODO 
         model_cfg = cfg.framework.action_model
         collate = collate_fn
 
-        vla_dataset = get_vla_dataset(data_cfg=vla_dataset_cfg, model_cfg=model_cfg, model_id=cfg.framework.qwenvl.base_vlm)
+        vla_dataset = get_vla_dataset(data_cfg=vla_dataset_cfg, model_cfg=model_cfg, model_id=cfg.framework.qwenvl.base_vlm, seed=cfg.seed)
         
         if isinstance(vla_dataset, tuple):
             w_action_dataset, all_dataset = vla_dataset
@@ -83,14 +83,14 @@ def build_multi_task_dataloader(cfg, dataset_py="lerobot_datasets_oxe"): # TODO 
             w_action_dataset,
             batch_size=cfg.datasets.vla_data.per_device_batch_size // 4,
             collate_fn=collate,
-            num_workers=4,
+            num_workers=1,
         )
         # forward_dynamics
         fd_train_dataloader = DataLoader(
             w_action_dataset,
             batch_size=cfg.datasets.vla_data.per_device_batch_size // 4,
             collate_fn=collate,
-            num_workers=4,
+            num_workers=1,
         )
 
         # video_gen
@@ -98,7 +98,7 @@ def build_multi_task_dataloader(cfg, dataset_py="lerobot_datasets_oxe"): # TODO 
             all_dataset,
             batch_size=cfg.datasets.vla_data.per_device_batch_size // 4,
             collate_fn=collate,
-            num_workers=4,
+            num_workers=1,
         )
 
         # inverse_dynamics
@@ -106,7 +106,7 @@ def build_multi_task_dataloader(cfg, dataset_py="lerobot_datasets_oxe"): # TODO 
             w_action_dataset,
             batch_size=cfg.datasets.vla_data.per_device_batch_size // 4,
             collate_fn=collate,
-            num_workers=4,
+            num_workers=1,
         )
         if dist.is_initialized():
             if dist.get_rank() == 0: 

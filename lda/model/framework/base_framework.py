@@ -21,12 +21,12 @@ from pathlib import Path
 from typing import Dict, List
 from transformers import AutoConfig, AutoModel, PretrainedConfig, PreTrainedModel
 import numpy as np
-from LDA.model.tools import auto_get_trainable_modules
+from lda.model.tools import auto_get_trainable_modules
 
-from LDA.model.framework.share_tools import read_mode_config
-from LDA.training.trainer_utils import initialize_overwatch
-from LDA.model.framework.share_tools import dict_to_namespace
-from LDA.model.framework.__init__ import build_framework
+from lda.model.framework.share_tools import read_mode_config
+from lda.training.trainer_utils import initialize_overwatch
+from lda.model.framework.share_tools import dict_to_namespace
+from lda.model.framework.__init__ import build_framework
 
 logger = initialize_overwatch(__name__)
 

@@ -38,10 +38,10 @@ mkdir -p ${output_dir}
 cp $0 ${output_dir}/
 
 accelerate launch \
-  --config_file LDA/config/deepseeds/deepspeed_zero2.yaml \
+  --config_file lda/config/deepseeds/deepspeed_zero2.yaml \
   --num_processes 8 \
-  LDA/training/train_starvla.py \
-  --config_yaml LDA/config/training/LDA_robocasa.yaml \
+  lda/training/train_starvla.py \
+  --config_yaml lda/config/training/lda_robocasa.yaml \
   --framework.name ${Framework_name} \
   --framework.qwenvl.base_vlm ${base_vlm} \
   --framework.action_model.action_model_type ${DIT_TYPE} \
@@ -60,7 +60,7 @@ accelerate launch \
   --trainer.learning_rate.base 4e-5 \
   --run_root_dir ${run_root_dir} \
   --run_id ${run_id} \
-  --wandb_project LDA \
+  --wandb_project lda \
   --wandb_entity ${wandb_entity} \
   --is_debug False
 

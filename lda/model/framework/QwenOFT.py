@@ -1,4 +1,4 @@
-# Copyright 2025 LDA community. All rights reserved.
+# Copyright 2025 lda community. All rights reserved.
 # Licensed under the MIT License, Version 1.0 (the "License");
 # Implemented by [Jinhui YE / HKUST University] in [2025]. 
 
@@ -15,8 +15,8 @@ Key Points:
 
 
 Note: How to add special tokens to Qwen2.5:
-  download our model checkpoint with special tokens added: https://huggingface.co/LDA/Qwen2.5-VL-3B-Instruct-Action
-  or /LDA/model/modules/vlm/tools/add_qwen_special_tokens/README.md （adpat a little code)
+  download our model checkpoint with special tokens added: https://huggingface.co/lda/Qwen2.5-VL-3B-Instruct-Action
+  or /lda/model/modules/vlm/tools/add_qwen_special_tokens/README.md （adpat a little code)
   
 """
 from typing import List
@@ -30,8 +30,8 @@ from PIL import Image
 
 
 
-from LDA.training.trainer_utils import initialize_overwatch
-from LDA.model.tools import FRAMEWORK_REGISTRY
+from lda.training.trainer_utils import initialize_overwatch
+from lda.model.tools import FRAMEWORK_REGISTRY
 from deployment.model_server.tools.image_tools import to_pil_preserve
 
 logger = initialize_overwatch(__name__)
@@ -39,10 +39,10 @@ logger = initialize_overwatch(__name__)
 # HuggingFace Default / LLaMa-2 IGNORE_INDEX (for labels)
 IGNORE_INDEX = -100
 
-from LDA.model.framework.base_framework import baseframework
-from LDA.model.modules.vlm import get_vlm_model
-from LDA.model.modules.action_model.MLP_ActionHeader import get_action_model
-from LDA.training.trainer_utils.trainer_tools import resize_images
+from lda.model.framework.base_framework import baseframework
+from lda.model.modules.vlm import get_vlm_model
+from lda.model.modules.action_model.MLP_ActionHeader import get_action_model
+from lda.training.trainer_utils.trainer_tools import resize_images
 
 @FRAMEWORK_REGISTRY.register("QwenOFT")
 class Qwenvl_OFT(baseframework):
@@ -263,7 +263,7 @@ if __name__ == "__main__":
     import debugpy
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_yaml", type=str, default="./LDA/config/training/LDA_cotrain_oxe.yaml", help="Path to YAML config")
+    parser.add_argument("--config_yaml", type=str, default="./lda/config/training/lda_cotrain_oxe.yaml", help="Path to YAML config")
     args, clipargs = parser.parse_known_args()
 
     debugpy.listen(("0.0.0.0", 10092))
@@ -312,7 +312,7 @@ if __name__ == "__main__":
 
     # try forward model
     # can be fake sample， but here get from dataloader for simpler
-    from LDA.dataloader.lerobot_datasets import get_vla_dataset, collate_fn
+    from lda.dataloader.lerobot_datasets import get_vla_dataset, collate_fn
 
     vla_dataset_cfg = cfg.datasets.vla_data
     dataset = get_vla_dataset(data_cfg=vla_dataset_cfg)

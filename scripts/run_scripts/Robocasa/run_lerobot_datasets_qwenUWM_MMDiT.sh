@@ -52,10 +52,10 @@ mkdir -p ${output_dir}
 cp $0 ${output_dir}/
 
 accelerate launch \
-  --config_file LDA/config/deepseeds/deepspeed_zero2.yaml \
+  --config_file lda/config/deepseeds/deepspeed_zero2.yaml \
   --num_processes 8 \
-  LDA/training/train_LDA.py \
-  --config_yaml LDA/config/training/LDA_robocasa.yaml \
+  lda/training/train_lda.py \
+  --config_yaml lda/config/training/lda_robocasa.yaml \
   --framework.name ${Framework_name} \
   --framework.qwenvl.base_vlm ${base_vlm} \
   --framework.action_model.vision_encoder_path ${vision_encoder_path} \
@@ -88,7 +88,7 @@ accelerate launch \
   --trainer.pretrained_checkpoint ${pretrained_checkpoint} \
   --run_root_dir ${run_root_dir} \
   --run_id ${run_id} \
-  --wandb_project LDA-robocasa \
+  --wandb_project lda-robocasa \
   --wandb_entity ${wandb_entity} \
   --is_debug False
 

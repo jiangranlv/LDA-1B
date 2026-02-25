@@ -21,8 +21,8 @@ from PIL import Image
 from decord import VideoReader
 import transformers
 from omegaconf import OmegaConf
-from LDA.dataloader.qwenvl_llavajson.qwen_data_config import data_list
-from LDA.dataloader.qwenvl_llavajson.rope2d import get_rope_index_25, get_rope_index_2
+from lda.dataloader.qwenvl_llavajson.qwen_data_config import data_list
+from lda.dataloader.qwenvl_llavajson.rope2d import get_rope_index_25, get_rope_index_2
 
 IGNORE_INDEX = -100
 IMAGE_TOKEN_INDEX = 151655
@@ -603,7 +603,7 @@ if __name__ == "__main__":
     import debugpy
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_yaml", type=str, default="./examples/LIBERO/train_files/LDA_cotrain_libero.yaml", help="Path to YAML config")
+    parser.add_argument("--config_yaml", type=str, default="./examples/LIBERO/train_files/lda_cotrain_libero.yaml", help="Path to YAML config")
     args, clipargs = parser.parse_known_args()
 
     debugpy.listen(("0.0.0.0", 10092))

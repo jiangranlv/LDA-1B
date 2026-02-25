@@ -1,6 +1,6 @@
 # Copyright 2025 NVIDIA Corp. and affiliates. All rights reserved.
 # Modified by [Junqiu YU/ Fudan University] in [2025]. 
-# Modification: [rm and add some connect adapter to match with LDA, e.g., "rm "].
+# Modification: [rm and add some connect adapter to match with lda, e.g., "rm "].
 # Action repeat is inspired by CogACT
 
 
@@ -17,12 +17,12 @@ from torch.distributions import Beta
 from transformers import PretrainedConfig
 from transformers.feature_extraction_utils import BatchFeature
 
-from LDA.model.modules.action_model.flow_matching_head.action_encoder import (
+from lda.model.modules.action_model.flow_matching_head.action_encoder import (
     SinusoidalPositionalEncoding,
     swish,
 )
 
-from LDA.model.modules.action_model.flow_matching_head.cross_attention_dit import DiT
+from lda.model.modules.action_model.flow_matching_head.cross_attention_dit import DiT
 
 # TODO try to meger DiT Modules with follow_match_head, they are just the same arch, but diff loss, use diffusers package will be simple
 

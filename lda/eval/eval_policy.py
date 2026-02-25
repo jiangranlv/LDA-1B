@@ -22,14 +22,14 @@ from collections import defaultdict
 import numpy as np
 from omegaconf import OmegaConf
 
-from LDA.training.trainer_utils.trainer_tools import normalize_dotlist_args
-from LDA.dataloader.lerobot_datasets import get_vla_dataset
-from LDA.dataloader.gr00t_lerobot.embodiment_tags import EMBODIMENT_TAG_MAPPING
-from LDA.model.framework.QwenGR00T import Qwen_GR00T
-from LDA.model.framework.base_framework import baseframework
-# from LDA.utils.eval_relative_eef import calc_mse_for_single_trajectory as calc_mse_for_single_trajectory_relative_eef
-# from LDA.utils.eval_wo_postprocess import calc_mse_for_single_trajectory as calc_mse_for_single_trajectory_relative_eef
-from LDA.model.framework import build_framework
+from lda.training.trainer_utils.trainer_tools import normalize_dotlist_args
+from lda.dataloader.lerobot_datasets import get_vla_dataset
+from lda.dataloader.gr00t_lerobot.embodiment_tags import EMBODIMENT_TAG_MAPPING
+from lda.model.framework.QwenGR00T import Qwen_GR00T
+from lda.model.framework.base_framework import baseframework
+# from lda.utils.eval_relative_eef import calc_mse_for_single_trajectory as calc_mse_for_single_trajectory_relative_eef
+# from lda.utils.eval_wo_postprocess import calc_mse_for_single_trajectory as calc_mse_for_single_trajectory_relative_eef
+from lda.model.framework import build_framework
 
 warnings.simplefilter("ignore", category=FutureWarning)
 
@@ -53,9 +53,9 @@ def main(config):
     policy.to("cuda")
     if config.is_delta_action:
         print("Delta Action Evaluation")
-        from LDA.utils.eval_relative_eef import calc_mse_for_single_trajectory as calc_mse_for_single_trajectory_relative_eef
+        from lda.utils.eval_relative_eef import calc_mse_for_single_trajectory as calc_mse_for_single_trajectory_relative_eef
     else:
-        from LDA.utils.eval_wo_postprocess import calc_mse_for_single_trajectory as calc_mse_for_single_trajectory_relative_eef
+        from lda.utils.eval_wo_postprocess import calc_mse_for_single_trajectory as calc_mse_for_single_trajectory_relative_eef
 
     all_tags = defaultdict(list)
     random_dataset_index = []
@@ -137,7 +137,7 @@ def main(config):
 if __name__ == "__main__":
     # Parse arguments using tyro
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_yaml", type=str, default="LDA/config/training/LDA_cotrain_oxe.yaml", help="Path to YAML config")
+    parser.add_argument("--config_yaml", type=str, default="lda/config/training/lda_cotrain_oxe.yaml", help="Path to YAML config")
     args, clipargs = parser.parse_known_args()
     # Load YAML config & Convert CLI overrides to dotlist config
     cfg = OmegaConf.load(args.config_yaml)

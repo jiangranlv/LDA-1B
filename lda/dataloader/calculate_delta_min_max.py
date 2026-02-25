@@ -6,7 +6,7 @@ from tqdm import tqdm
 import pandas as pd
 from multiprocessing import Pool
 import argparse
-from LDA.utils.rotation_convert import calculate_delta_eef
+from lda.utils.rotation_convert import calculate_delta_eef
 
 # modality.json
 modality_data ={
@@ -92,7 +92,7 @@ modality_data ={
     },
     "video": {
         "top_head": {
-            "original_key": "observation.images.head"
+            "original_key": "observation.images.top_head"
         }
     },
     "annotation": {
@@ -344,7 +344,7 @@ def process_single_task(parquet_paths, save_path, window_size, samples_per_file,
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset_root", type=str, required=True)
-    parser.add_argument("--save_path", type=str, default="stats.json")
+    parser.add_argument("--save_path", type=str, default="stats_eef.json")
     parser.add_argument("--window_size", type=int, default=17)
     parser.add_argument("--samples_per_file", type=int, default=64)
     parser.add_argument("--num_workers", type=int, default=8)

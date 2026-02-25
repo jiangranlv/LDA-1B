@@ -21,7 +21,7 @@ from hyper_connections import (
     Residual
 )
 
-from LDA.model.modules.action_model.flow_matching_head.cdit import TimestepEncoder
+from lda.model.modules.action_model.flow_matching_head.cdit import TimestepEncoder
 # helpers
 
 def exists(v):

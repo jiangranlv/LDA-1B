@@ -50,8 +50,8 @@ mkdir -p ${output_dir}
 # mv this script to the output dir
 cp $0 ${output_dir}/
 
-python LDA/training/debug.py \
-  --config_yaml LDA/config/training/LDA_cotrain_4_tasks_ours.yaml \
+python lda/training/debug.py \
+  --config_yaml lda/config/training/lda_cotrain_4_tasks_ours.yaml \
   --framework.name ${Framework_name} \
   --framework.qwenvl.base_vlm ${base_vlm} \
   --framework.action_model.action_model_type ${DIT_TYPE} \
@@ -82,7 +82,7 @@ python LDA/training/debug.py \
   --trainer.pretrained_checkpoint ${pretrained_checkpoint} \
   --run_root_dir ${run_root_dir} \
   --run_id ${run_id} \
-  --wandb_project LDA \
+  --wandb_project lda \
   --wandb_entity ${wandb_entity} \
   --is_debug False
 

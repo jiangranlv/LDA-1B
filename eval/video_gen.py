@@ -3,7 +3,7 @@ from locale import normalize
 import logging
 import socket
 import argparse
-from LDA.model.framework.base_framework import baseframework
+from lda.model.framework.base_framework import baseframework
 import torch, os
 import pandas as pd
 import numpy as np

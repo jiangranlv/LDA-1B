@@ -1,6 +1,6 @@
 # Copyright 2025 NVIDIA Corp. and affiliates. All rights reserved.
 # Modified by [Junqiu YU/ Fudan University] in [2025]. 
-# Modification: [rm and add some connect adapter to match with LDA, e.g., "rm "].
+# Modification: [rm and add some connect adapter to match with lda, e.g., "rm "].
 # Action repeat is inspired by CogACT
 
 
@@ -21,13 +21,13 @@ from einops import rearrange
 import time
 from typing import List
 
-from LDA.model.modules.action_model.flow_matching_head.action_encoder import (
+from lda.model.modules.action_model.flow_matching_head.action_encoder import (
     SinusoidalPositionalEncoding,
     swish,
 )
 
-from LDA.model.modules.action_model.flow_matching_head.mmdit.mmdit.mmdit_cross_attn import MMDiT as DiT
-from LDA.model.modules.dinov3_vit import DINOv3ViTModel
+from lda.model.modules.action_model.flow_matching_head.mmdit.mmdit.mmdit_cross_attn import MMDiT as DiT
+from lda.model.modules.dinov3_vit import DINOv3ViTModel
 
 TRAINING_TASKS = ["policy", "forward_dynamics", "inverse_dynamics", "video_gen"]
 

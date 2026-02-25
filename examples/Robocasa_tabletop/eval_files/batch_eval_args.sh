@@ -6,11 +6,11 @@
 ###########################################################################################
 # === Please modify the paths to Python executables in conda environments ===
 
-cd ./LDA
-LDA_PYTHON=~/miniconda3/envs/LDA/bin/python
+cd ./lda
+LDA_PYTHON=~/miniconda3/envs/lda/bin/python
 ROBOCASA_PYTHON=~/miniconda3/envs/robocasa/bin/python
 export PYTHONPATH=$(pwd):${PYTHONPATH}
-CKPT_DEFAULT="LDA/Qwen3-VL-OFT-Robocasa/checkpoints/steps_90000_pytorch_model.pt"
+CKPT_DEFAULT="lda/Qwen3-VL-OFT-Robocasa/checkpoints/steps_90000_pytorch_model.pt"
 
 
 # === End of environment variable configuration ===

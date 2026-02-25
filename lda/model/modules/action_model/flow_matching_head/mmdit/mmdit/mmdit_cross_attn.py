@@ -23,9 +23,9 @@ from diffusers import ConfigMixin, ModelMixin
 from diffusers.configuration_utils import register_to_config
 from diffusers.models.embeddings import SinusoidalPositionalEmbedding
 
-from LDA.model.modules.action_model.flow_matching_head.cdit import TimestepEncoder
-from LDA.model.modules.action_model.flow_matching_head.mmdit.mmdit.mmdit_self_attn import JointAttention
-from LDA.model.modules.action_model.flow_matching_head.mmdit.mmdit.rope_3d import Rotary3D, Rotary1D
+from lda.model.modules.action_model.flow_matching_head.cdit import TimestepEncoder
+from lda.model.modules.action_model.flow_matching_head.mmdit.mmdit.mmdit_self_attn import JointAttention
+from lda.model.modules.action_model.flow_matching_head.mmdit.mmdit.rope_3d import Rotary3D, Rotary1D
 # helpers
 
 def exists(v):

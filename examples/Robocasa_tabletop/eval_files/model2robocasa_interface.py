@@ -14,7 +14,7 @@ from pathlib import Path
 
 
 
-from LDA.model.framework.share_tools import read_mode_config
+from lda.model.framework.share_tools import read_mode_config
 
 
 

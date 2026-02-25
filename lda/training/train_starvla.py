@@ -1,10 +1,10 @@
-# Copyright 2025 LDA community. All rights reserved.
+# Copyright 2025 lda community. All rights reserved.
 # Licensed under the MIT License, Version 1.0 (the "License"); 
 # Implemented by [Jinhui YE / HKUST University] in [2025].
 
 
 """
-LDA’s trainer is built directly on native PyTorch + Accelerate + DeepSpeed, keeping the loop explicit and easy to hack.
+lda’s trainer is built directly on native PyTorch + Accelerate + DeepSpeed, keeping the loop explicit and easy to hack.
 Conventions:
 1. Store runtime state in dicts where possible (simplifies data info, procesing info, config, etc).  
 2. Use multiple dataloaders to adapt heterogeneous data types / task mixtures.  
@@ -35,11 +35,11 @@ from tqdm import tqdm
 from transformers import AutoProcessor, get_scheduler
 
 # Local Modules
-from LDA.training.trainer_utils.trainer_tools import normalize_dotlist_args
-from LDA.model.framework import build_framework
-from LDA.training.trainer_utils.trainer_tools import TrainerUtils
-from LDA.training.trainer_utils.trainer_tools import build_param_lr_groups
-from LDA.training.trainer_utils.config_tracker import wrap_config, AccessTrackedConfig
+from lda.training.trainer_utils.trainer_tools import normalize_dotlist_args
+from lda.model.framework import build_framework
+from lda.training.trainer_utils.trainer_tools import TrainerUtils
+from lda.training.trainer_utils.trainer_tools import build_param_lr_groups
+from lda.training.trainer_utils.config_tracker import wrap_config, AccessTrackedConfig
 
 deepspeed_plugin = DeepSpeedPlugin()
 accelerator = Accelerator(deepspeed_plugin=deepspeed_plugin)
@@ -88,7 +88,7 @@ def build_model(cfg) -> torch.nn.Module:
 
 
 # here changes need to 📦 encapsulate Dataloader
-from LDA.dataloader import build_dataloader
+from lda.dataloader import build_dataloader
 
 
 def prepare_data(cfg, accelerator, output_dir) -> Tuple[DataLoader, DataLoader]:
@@ -520,7 +520,7 @@ def main(cfg) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_yaml", type=str, default="LDA/config/training/LDA_cotrain_oxe.yaml", help="Path to YAML config")
+    parser.add_argument("--config_yaml", type=str, default="lda/config/training/lda_cotrain_oxe.yaml", help="Path to YAML config")
     args, clipargs = parser.parse_known_args()
 
     # Load YAML config & Convert CLI overrides to dotlist config

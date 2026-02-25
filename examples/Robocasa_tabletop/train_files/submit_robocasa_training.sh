@@ -5,8 +5,8 @@
 #SBATCH --ntasks-per-node=1          # crucial - only 1 task per dist per node!
 #SBATCH --cpus-per-task=128          # number of cores per tasks
 #SBATCH --gres=gpu:8                 # number of gpus
-#SBATCH --output=/mnt/petrelfs/yejinhui/Projects/LDA/results/logs/%x-%j.out           # output file name
-#SBATCH --error=/mnt/petrelfs/yejinhui/Projects/LDA/results/logs/%x-%j.err
+#SBATCH --output=/mnt/petrelfs/yejinhui/Projects/lda/results/logs/%x-%j.out           # output file name
+#SBATCH --error=/mnt/petrelfs/yejinhui/Projects/lda/results/logs/%x-%j.err
 #SBATCH --exclude=SH-IDCA1404-10-140-54-13
 
 #  6955707                 si     RoCaPI       reserved yejinhui       normal  R        9:14      4     gpu:32 SH-IDCA1404-10-140-54-[13,88-89,107]   
@@ -33,8 +33,8 @@ export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
 export MASTER_PORT=$((RANDOM % 101 + 20000))
 
 
-cd /mnt/petrelfs/yejinhui/Projects/LDA
-export PYTHONPATH="$PWD/LDA/model/openvla:$PYTHONPATH"
+cd /mnt/petrelfs/yejinhui/Projects/lda
+export PYTHONPATH="$PWD/lda/model/openvla:$PYTHONPATH"
 
 # conda activate llavavla310
 proxy_on
@@ -50,7 +50,7 @@ export base_vlm=./playground/Pretrained_models/Qwen3-VL-4B-Instruct-Action
 export freeze_module_list=""
 export action_input_dim=2560
 export DIT_TYPE="DiT-B"
-export config_yaml=./examples/Robocasa_tabletop/train_files/LDA_cotrain_robocasa_gr1.yaml
+export config_yaml=./examples/Robocasa_tabletop/train_files/lda_cotrain_robocasa_gr1.yaml
 export data_mix=fourier_gr1_unified_1000
 export include_state=True
 export run_root_dir=./results/Checkpoints
@@ -76,13 +76,13 @@ cp $0 ${output_dir}/
   # --datasets.vla_data.include_state ${include_state} \
 
 srun --jobid $SLURM_JOBID bash -c 'accelerate launch \
-  --config_file LDA/config/deepseeds/deepspeed_zero2.yaml \
+  --config_file lda/config/deepseeds/deepspeed_zero2.yaml \
   --main_process_ip $MASTER_ADDR \
   --main_process_port $MASTER_PORT \
   --machine_rank $SLURM_PROCID \
   --num_machines $SLURM_NNODES \
   --num_processes=${TOTAL_GPUS} \
-  LDA/training/train_LDA.py \
+  lda/training/train_lda.py \
   --config_yaml ${config_yaml} \
   --framework.name ${Framework_name} \
   --framework.action_model.action_model_type ${DIT_TYPE} \
@@ -98,7 +98,7 @@ srun --jobid $SLURM_JOBID bash -c 'accelerate launch \
   --trainer.learning_rate.base 3e-5 \
   --run_root_dir ${run_root_dir} \
   --run_id ${run_id} \
-  --wandb_project LDA_Robocasa \
+  --wandb_project lda_Robocasa \
   --wandb_entity jinhuiye \
   --trainer.is_resume True '
 

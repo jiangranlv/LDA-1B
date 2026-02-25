@@ -53,7 +53,7 @@ plot_path=${base_dir}/results/steps_${steps}
 gt_traj_dir=${plot_path}
 traj_names=GT,Pred
 
-python LDA/eval/eval_policy.py \
+python lda/eval/eval_policy.py \
   --config_yaml ${base_dir}/config.yaml \
   --save_plot_path ${base_dir}/plots \
   --seed ${seed} \

@@ -144,7 +144,7 @@ FRAMEWORK_REGISTRY = Registry("frameworks")
 
 
 
-from LDA.training.trainer_utils import initialize_overwatch
+from lda.training.trainer_utils import initialize_overwatch
 import os
 import json
 from pathlib import Path

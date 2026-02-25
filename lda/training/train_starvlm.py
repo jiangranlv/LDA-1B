@@ -16,11 +16,11 @@ from transformers import AutoProcessor, get_scheduler
 from torch.utils.data import DataLoader
 
 # Local Modules
-from LDA.dataloader import build_dataloader
-from LDA.training.trainer_utils.trainer_tools import normalize_dotlist_args, TrainerUtils
-from LDA.model.framework import build_framework
-from LDA.training.trainer_utils.trainer_tools import build_param_lr_groups
-from LDA.training.trainer_utils.config_tracker import wrap_config, AccessTrackedConfig
+from lda.dataloader import build_dataloader
+from lda.training.trainer_utils.trainer_tools import normalize_dotlist_args, TrainerUtils
+from lda.model.framework import build_framework
+from lda.training.trainer_utils.trainer_tools import build_param_lr_groups
+from lda.training.trainer_utils.config_tracker import wrap_config, AccessTrackedConfig
 
 deepspeed_plugin = DeepSpeedPlugin()
 accelerator = Accelerator(deepspeed_plugin=deepspeed_plugin)
@@ -306,7 +306,7 @@ def main(cfg) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_yaml", type=str, default="LDA/config/training/LDA_cotrain_oxe.yaml", help="Path to YAML config")
+    parser.add_argument("--config_yaml", type=str, default="lda/config/training/lda_cotrain_oxe.yaml", help="Path to YAML config")
     args, clipargs = parser.parse_known_args()
 
     cfg = OmegaConf.load(args.config_yaml)

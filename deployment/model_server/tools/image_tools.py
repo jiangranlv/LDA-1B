@@ -93,7 +93,9 @@ def to_pil_preserve(images: Any, scale_float: bool = True):
         # numpy -> PIL
         if isinstance(obj, np.ndarray):
             arr = obj
-            if arr.ndim != 3:
+            if arr.ndim == 4: # [N, H, W, C]
+                return [_convert(im) for im in arr]
+            elif arr.ndim != 3:
                 raise ValueError(f"Expected 3D array (H,W,C), got shape={arr.shape}")
             if arr.shape[2] not in (1,3,4):
                 raise ValueError(f"Channel count must be 1/3/4, got {arr.shape[2]}")

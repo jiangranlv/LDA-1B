@@ -1,4 +1,4 @@
-# Copyright 2025 LDA community. All rights reserved.
+# Copyright 2025 lda community. All rights reserved.
 # Licensed under the MIT License, Version 1.0 (the "License"); 
 # Implemented by [Jinhui YE / HKUST University] in [2025].
 
@@ -6,7 +6,7 @@ import logging
 import socket
 import argparse
 from deployment.model_server.tools.websocket_policy_server import WebsocketPolicyServer
-from LDA.model.framework.base_framework import baseframework
+from lda.model.framework.base_framework import baseframework
 import torch, os
 
 

@@ -33,24 +33,26 @@ from typing import Sequence
 import os, random
 import numpy as np
 import pandas as pd
+import gc
 from pydantic import BaseModel, Field, ValidationError
 from torch.utils.data import Dataset
 from tqdm import tqdm
 from PIL import Image
+import torch.distributed as dist
 
 from transformers import AutoProcessor
 from qwen_vl_utils import process_vision_info
 
-from LDA.utils.rotation_convert import calculate_delta_eef
-from LDA.dataloader.gr00t_lerobot.video import get_all_frames, get_frames_by_timestamps
-from LDA.dataloader.gr00t_lerobot.embodiment_tags import EmbodimentTag, EMBODIMENT_TAG_MAPPING, TASK_MAPPING
-from LDA.dataloader.gr00t_lerobot.schema import (
+from lda.utils.rotation_convert import calculate_delta_eef
+from lda.dataloader.gr00t_lerobot.video import get_all_frames, get_frames_by_timestamps
+from lda.dataloader.gr00t_lerobot.embodiment_tags import EmbodimentTag, EMBODIMENT_TAG_MAPPING, TASK_MAPPING
+from lda.dataloader.gr00t_lerobot.schema import (
     DatasetMetadata,
     DatasetStatisticalValues,
     LeRobotModalityMetadata,
     LeRobotStateActionMetadata,
 )
-from LDA.dataloader.gr00t_lerobot.transform import ComposedModalityTransform
+from lda.dataloader.gr00t_lerobot.transform import ComposedModalityTransform
 
 from functools import partial
 from typing import Tuple, List
@@ -61,7 +63,7 @@ LE_ROBOT_MODALITY_FILENAME = "meta/modality.json"
 LE_ROBOT_EPISODE_FILENAME = "meta/episodes.jsonl"
 LE_ROBOT_TASKS_FILENAME = "meta/tasks.jsonl"
 LE_ROBOT_INFO_FILENAME = "meta/info.json"
-LE_ROBOT_STATS_FILENAME = "meta/stats_gr00t.json"
+LE_ROBOT_STATS_FILENAME = "meta/stats.json"
 LE_ROBOT_DATA_FILENAME = "data/*/*.parquet"
 LE_ROBOT_STEPS_FILENAME = "meta/steps.pkl"
 
@@ -1843,6 +1845,8 @@ class LeRobotMixtureDataset(Dataset):
         # Set the epoch and sample the first epoch
         self.set_epoch(0)
 
+        self.rank = dist.get_rank() if dist.is_initialized() else 0
+
         self.update_metadata(metadata_config)
 
     @property
@@ -1876,7 +1880,7 @@ class LeRobotMixtureDataset(Dataset):
         return json.dumps({"Mixture dataset": dataset_descriptions}, indent=2)
 
     def sample_step(self, index: int):
-        seed = index if self.mode != "train" else safe_hash((self.epoch, index, self.seed))
+        seed = index if self.mode != "train" else safe_hash((self.epoch, index, self.seed, self.rank))
         rng = np.random.default_rng(seed)
 
         dataset_index = rng.choice(len(self.datasets), p=self.dataset_sampling_weights)
@@ -1959,6 +1963,10 @@ class LeRobotMixtureDataset(Dataset):
             raw_data = self.get_next_state(raw_data, 'action.left_gripper', history_action_indices)
             if "action.right_gripper" in raw_data.keys():
                 raw_data = self.get_next_state(raw_data, 'action.right_gripper', history_action_indices)
+        if 'action.left_mano_hand' in raw_data.keys():
+            raw_data = self.get_next_state(raw_data, 'action.left_mano_hand', history_action_indices)
+            if 'action.right_mano_hand' in raw_data.keys():
+                raw_data = self.get_next_state(raw_data, 'action.right_mano_hand', history_action_indices)
         return raw_data
 
     def __getitem__(self, index: int) -> dict:
@@ -2028,11 +2036,11 @@ class LeRobotMixtureDataset(Dataset):
                         future_image = expand2square(future_image, background_color)
                         future_image = future_image.resize((224, 224))
                         if "wrist" not in video_key:
-                            future_prim_images.append(image)
+                            future_prim_images.append(future_image)
                         else:
-                            future_wrist_views.append(image)
+                            future_wrist_views.append(future_image)
                 future_all_images = future_prim_images + future_wrist_views
-                
+
                 # Get language and action data
                 language = data[dataset.modality_keys["language"][0]][0]
                 history_action = None
@@ -2046,8 +2054,12 @@ class LeRobotMixtureDataset(Dataset):
                             padded_action, mask = pad_action_state_with_key(data[action_key][history_len:], action_key, dataset_single_arm)
                             padded_history_action, history_mask = pad_action_state_with_key(data[action_key][:history_len], action_key, dataset_single_arm)
                             if f"{action_key}_mask" in data.keys():
-                                wrist_mask = data[f"{action_key}_mask"].reshape(-1, 1)[history_len:]
-                                mask = mask & wrist_mask
+                                if self.use_delta_action:
+                                    wrist_mask = data[f"{action_key}_mask"].reshape(-1, 1)[history_len+2:] 
+                                    mask = mask & wrist_mask
+                                else:
+                                    wrist_mask = data[f"{action_key}_mask"].reshape(-1, 1)[history_len:] 
+                                    mask = mask & wrist_mask
                             if dataset_no_mano and "eef_rotation" in action_key:
                                 # 在padded action后加63维度
                                 padded_action = np.concatenate([padded_action, np.zeros((padded_action.shape[0], 63))], axis=1)
@@ -2065,7 +2077,7 @@ class LeRobotMixtureDataset(Dataset):
                         action_mask = np.concatenate(action_mask, axis=1)
                         action, action_mask = pad_action_state_to_max_length(action, action_mask, self.action_dim)
                     else:
-                        history_action = np.zeros((5, 1), dtype=np.float32)
+                        history_action = np.zeros((history_len, 1), dtype=np.float32)
                         history_action_mask = np.zeros((history_action.shape[0], history_action.shape[1]), dtype=bool)
                         history_action, history_action_mask = pad_action_state_to_max_length(history_action, history_action_mask, self.action_dim)
                         action = np.zeros((16, 1), dtype=np.float32)
@@ -2399,7 +2411,7 @@ class LeRobotMixtureDataset(Dataset):
         for dataset in self.datasets:
             if dataset.tag in VIDEOGEN_DATASET:
                 continue
-            dataset.set_transforms_metadata(self.merged_metadata[dataset.tag])
+            dataset.set_transforms_metadata(self.merged_metadata[dataset.tag])  
 
     def save_dataset_statistics(self, save_path: Path | str, format: str = "json") -> None:
         """
