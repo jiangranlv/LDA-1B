@@ -35,7 +35,7 @@ import numpy as np
 import pandas as pd
 import gc
 from pydantic import BaseModel, Field, ValidationError
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, get_worker_info
 from tqdm import tqdm
 from PIL import Image
 import torch.distributed as dist
@@ -105,7 +105,12 @@ def pad_action_state_to_max_length(action_state: np.ndarray, action_mask: np.nda
     return action_state, action_mask_all
 
 def pad_action_state_with_key(action_state: np.ndarray, action_key: str, single_arm: bool = False) -> np.ndarray:
-    """Pad the action and state to the max length."""
+    """
+    Pad the action and state to the max length.
+    action_state: (T, D),
+    action_key: indicate what the action_state is, e.g., "eef_position", "eef_rotation", "mano_hand_param", "mano_ee_2d", "mano_parameters", "arm", "left_hand", "right_hand", "waist", "sharpa_qpos", "qpos", "mano_keypoint" or "gripper"
+    single_arm: if True, set the right arm to be zeros, only for "arm", "left_hand" and "right_hand" action keys
+    """
     if "eef_position" in action_key:
         max_length = 3
     elif "eef_rotation" in action_key:
@@ -474,6 +479,12 @@ class LeRobotSingleDataset(Dataset):
                 "fps": fps,
             }
         # 2. Dataset statistics
+        def is_main():
+            return (not dist.is_initialized()) or dist.get_rank() == 0
+        
+        # action_mode = _normalize_action_mode(self.data_cfg.get("action_mode", "abs") if self.data_cfg else "abs")
+        # le_statistics_by_mode = None
+
         stats_path = self.dataset_path / LE_ROBOT_STATS_FILENAME
         try:
             with open(stats_path, "r") as f:
@@ -925,7 +936,7 @@ class LeRobotSingleDataset(Dataset):
         
         return dict(action=action, image=images, language=language)
 
-    def get_step_data_with_transform(self, trajectory_id: int, base_index: int, processor, vlm_id, return_state=True) -> dict:
+    def get_step_data_with_transform(self, trajectory_id: int, base_index: int, return_state=True) -> dict:
         raw_data = self.get_step_data(trajectory_id, base_index)
         embodiment_tag = EMBODIMENT_TAG_MAPPING[self._metadata.embodiment_tag.value]
     
@@ -1231,7 +1242,6 @@ class LeRobotSingleDataset(Dataset):
         """
         # Get the step indices
         step_indices = self.delta_indices[key] + base_index
-        # print(f"{step_indices=}")
         # Get the trajectory index
         trajectory_index = self.get_trajectory_index(trajectory_id)
         # Ensure the indices are within the valid range
@@ -1846,7 +1856,33 @@ class LeRobotMixtureDataset(Dataset):
         self.set_epoch(0)
 
         self.rank = dist.get_rank() if dist.is_initialized() else 0
+        self.world_size = dist.get_world_size() if dist.is_initialized() else 1
+        
+        self._sequential_step_sampling = True
+        if self.data_cfg is not None:
+            seq_cfg = self.data_cfg.get("sequential_step_sampling", True)
+            self._sequential_step_sampling = seq_cfg not in ["False", False]
 
+        self._step_order: list[np.ndarray] = []
+        self._step_pos: list[int] = []
+        if self._sequential_step_sampling:
+            for dataset in self.datasets:
+                self._step_order.append(np.arange(len(dataset.all_steps)))
+                if self.mode == "train":
+                    rng = np.random.default_rng(self.seed)
+                    rng.shuffle(self._step_order[-1])
+                self._step_pos.append(0)
+
+        # Build task -> candidate dataset mapping for task-aware batch samplers.
+        self.dataset_supported_tasks = []
+        self.task_to_dataset_indices = defaultdict(list)
+        for dataset_index, dataset in enumerate(self.datasets):
+            embodiment = dataset._metadata.embodiment_tag.value
+            tasks = TASK_MAPPING.get(embodiment, [])
+            task_set = set(tasks)
+            self.dataset_supported_tasks.append(task_set)
+            for task in task_set:
+                self.task_to_dataset_indices[task].append(dataset_index)
         self.update_metadata(metadata_config)
 
     @property
@@ -1879,14 +1915,70 @@ class LeRobotMixtureDataset(Dataset):
             dataset_descriptions.append(dataset_description)
         return json.dumps({"Mixture dataset": dataset_descriptions}, indent=2)
 
-    def sample_step(self, index: int):
+    def _distributed_step_stream(self) -> tuple[int, int]:
+        worker_info = get_worker_info()
+        if worker_info is None:
+            return self.rank, self.world_size
+        num_workers = max(worker_info.num_workers, 1)
+        local_worker_rank = worker_info.id
+        return self.rank * num_workers + local_worker_rank, self.world_size * num_workers
+
+    def _sample_dataset_for_task(
+        self, rng: np.random.Generator, task: str | None
+    ) -> tuple[int, "LeRobotSingleDataset"]:
+        if task is None:
+            dataset_index = int(rng.choice(len(self.datasets), p=self.dataset_sampling_weights))
+            return dataset_index, self.datasets[dataset_index]
+
+        candidate_indices = self.task_to_dataset_indices.get(task, [])
+        if not candidate_indices:
+            raise ValueError(f"No dataset supports task '{task}'")
+        candidate_indices = np.asarray(candidate_indices, dtype=np.int64)
+        candidate_weights = self.dataset_sampling_weights[candidate_indices].astype(np.float64)
+        weight_sum = candidate_weights.sum()
+        if weight_sum <= 0 or np.isnan(weight_sum):
+            candidate_weights = np.ones(len(candidate_indices), dtype=np.float64) / len(candidate_indices)
+        else:
+            candidate_weights = candidate_weights / weight_sum
+        picked = int(rng.choice(len(candidate_indices), p=candidate_weights))
+        dataset_index = int(candidate_indices[picked])
+        return dataset_index, self.datasets[dataset_index]
+
+    def sample_step(self, index: int, task: str | None = None):
         seed = index if self.mode != "train" else safe_hash((self.epoch, index, self.seed, self.rank))
         rng = np.random.default_rng(seed)
 
-        dataset_index = rng.choice(len(self.datasets), p=self.dataset_sampling_weights)
-        dataset = self.datasets[dataset_index]
+        dataset_index, dataset = self._sample_dataset_for_task(rng, task)
 
-        single_step_index = rng.choice(len(dataset.all_steps))
+        if not self._sequential_step_sampling:
+            single_step_index = rng.choice(len(dataset.all_steps))
+        else:
+            rank_offset, rank_stride = self._distributed_step_stream()
+            step_pos = self._step_pos[dataset_index]
+            if step_pos >= len(dataset.all_steps):
+                order = np.arange(len(dataset.all_steps))
+                if self.mode == "train":
+                    seed = safe_hash((self.epoch, dataset_index, self.seed, step_pos))
+                    rng = np.random.default_rng(seed)
+                    rng.shuffle(order)
+                self._step_order[dataset_index] = order
+                step_pos = 0
+
+            order = self._step_order[dataset_index]
+            shard_pos = step_pos * rank_stride + rank_offset
+            if shard_pos >= len(order):
+                # Start a new local cycle when this rank/worker shard is exhausted.
+                order = np.arange(len(dataset.all_steps))
+                if self.mode == "train":
+                    seed = safe_hash((self.epoch, dataset_index, self.seed, step_pos, rank_stride))
+                    rng = np.random.default_rng(seed)
+                    rng.shuffle(order)
+                self._step_order[dataset_index] = order
+                step_pos = 0
+                shard_pos = rank_offset
+
+            single_step_index = order[shard_pos]
+            self._step_pos[dataset_index] = step_pos + 1
         trajectory_id, base_index = dataset.all_steps[single_step_index]
 
         return dataset, trajectory_id, base_index
@@ -1919,7 +2011,7 @@ class LeRobotMixtureDataset(Dataset):
             raw_data[key] = raw_data[key][1:]
         return raw_data
 
-    def get_delta_action_from_raw_data(self, raw_data, history_action_indices=None):
+    def get_delta_action_from_raw_data(self, raw_data, embodiment_tag, history_action_indices=None):
         if 'action.left_eef_position' not in raw_data.keys():
             return raw_data
         if history_action_indices is not None:
@@ -1960,6 +2052,10 @@ class LeRobotMixtureDataset(Dataset):
             raw_data = self.get_next_state(raw_data, 'action.left_hand', history_action_indices)
             raw_data = self.get_next_state(raw_data, 'action.right_hand', history_action_indices)
         if 'action.left_gripper' in raw_data.keys():
+            if embodiment_tag == 0: # for agibot world dataset, the gripper open/close is represented as 0/1, which is the opposite of other datasets.
+                raw_data['action.left_gripper'] = 1 - raw_data['action.left_gripper']
+                if "action.right_gripper" in raw_data.keys():
+                    raw_data['action.right_gripper'] = 1 - raw_data['action.right_gripper']
             raw_data = self.get_next_state(raw_data, 'action.left_gripper', history_action_indices)
             if "action.right_gripper" in raw_data.keys():
                 raw_data = self.get_next_state(raw_data, 'action.right_gripper', history_action_indices)
@@ -1969,7 +2065,7 @@ class LeRobotMixtureDataset(Dataset):
                 raw_data = self.get_next_state(raw_data, 'action.right_mano_hand', history_action_indices)
         return raw_data
 
-    def __getitem__(self, index: int) -> dict:
+    def __getitem__(self, index: int | tuple[int, str]) -> dict:
         """Get the data for a single trajectory and start index.
 
         Args:
@@ -1980,10 +2076,15 @@ class LeRobotMixtureDataset(Dataset):
         """
         max_retries = 10
         last_exception = None
+        if isinstance(index, tuple):
+            index, assigned_task = index
+        else:
+            assigned_task = None
+
         for attempt in range(max_retries):
             try:
                 while True: # @DUG
-                    dataset, trajectory_id, step = self.sample_step(index)
+                    dataset, trajectory_id, step = self.sample_step(index, assigned_task)
                     key = dataset.modality_keys["video"][0].replace("video.", "")
                     video_path = dataset.get_video_path(trajectory_id, key)
                     if os.path.exists(video_path):
@@ -2004,7 +2105,7 @@ class LeRobotMixtureDataset(Dataset):
                 raw_data = dataset.get_step_data(trajectory_id, step)    
                 history_len = len(dataset.history_action_indices) if dataset.history_action_indices is not None else 0
                 if self.use_delta_action:
-                    raw_data = self.get_delta_action_from_raw_data(raw_data, dataset.history_action_indices)
+                    raw_data = self.get_delta_action_from_raw_data(raw_data, embodiment_tag, dataset.history_action_indices)
                     if dataset.history_action_indices is not None:
                         history_len = len(dataset.history_action_indices) - 1
                 data = dataset.transforms(raw_data)
@@ -2115,10 +2216,10 @@ class LeRobotMixtureDataset(Dataset):
                         state = np.zeros((1, 1), dtype=np.float32)
                     # prim_images
                     return dict(action=action, history_action=history_action, action_mask=action_mask, image=all_images, 
-                    future_image=future_all_images, lang=language, state=state, embodiment_id=embodiment_tag)
+                    future_image=future_all_images, lang=language, state=state, embodiment_id=embodiment_tag, assigned_task=assigned_task)
 
                 return dict(action=action, history_action=history_action, action_mask=action_mask, image=all_images, future_image=future_all_images, 
-                    lang=language, embodiment_id=embodiment_tag)
+                    lang=language, embodiment_id=embodiment_tag, assigned_task=assigned_task)
                 
             except Exception as e:
                 last_exception = e

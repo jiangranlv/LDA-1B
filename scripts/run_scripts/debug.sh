@@ -10,30 +10,28 @@ export NCCL_TIMEOUT=1000  # timeout set to 1 hour (unit: seconds)
 
 
 Framework_name=QwenMMDiT
-base_vlm=/path/to/pretrained/VLM
-vision_encoder_path=/path/to/pretrained/vision/encoder # should be the parent path of vision encoder ckpt
+base_vlm=/mnt/home/liukai/starVLA/playground/pretrained/vlm/Qwen3-VL-4B-Instruct
+vision_encoder_path=/mnt/home/liukai/World-Action-Model/pretrained # should be the parent path of vision encoder ckpt
 
 freeze_module_list='qwen_vl_interface,action_model.vision_encoder' # just for fast debug, sota is under fully FT, i.g., freeze_module_list=""
 DIT_TYPE="DiT-B"
-# freeze_module_list="qwen_vl_interface.model.model.visual,dino_encoder" # just for fast debug, sota is under fully FT, i.g., freeze_module_list=""
+data_root_dir=/mnt/home/liukai/code/LDA/playground/demo_data
+data_mix=demo_data # should be recorded in data_config.py
 
-llavadata="asv2_conversation_en,asv2_detailed_description_en"
-data_root_dir=/path/to/data/directory
-data_mix=data_mix_name # should be recorded in data_config.py
-
-obs_horizon=2
+obs_horizon=1
 state_dim=null
-action_dim=138
-max_num_embodiments=32
+action_dim=12
+max_num_embodiments=1
 num_layers=8
-use_delta_action=true
+use_delta_action=false
 positional_embeddings=null
 
 repeated_diffusion_steps=1
+training_task_weights="[1.0,1.0,1.0,1.0]"
 
 future_obs_index=5
-run_root_dir=/path/to/save/training/results # replace with your own path
-run_id=/run/id
+run_root_dir=/mnt/project/world_model/checkpoints/lda # replace with your own path
+run_id=debug
 
 pretrained_checkpoint=null # set to null if training from scratch
 vision_encoder_type='dinov3'
@@ -51,9 +49,11 @@ mkdir -p ${output_dir}
 cp $0 ${output_dir}/
 
 python lda/training/debug.py \
-  --config_yaml lda/config/training/lda_cotrain_4_tasks_ours.yaml \
+  --config_yaml lda/config/training/LDA_pretrain.yaml \
+  --debug \
   --framework.name ${Framework_name} \
   --framework.qwenvl.base_vlm ${base_vlm} \
+  --framework.action_model.vision_encoder_path ${vision_encoder_path} \
   --framework.action_model.action_model_type ${DIT_TYPE} \
   --framework.action_model.max_num_embodiments ${max_num_embodiments} \
   --framework.action_model.state_dim ${state_dim} \
@@ -68,10 +68,9 @@ python lda/training/debug.py \
   --framework.action_model.diffusion_model_cfg.positional_embeddings ${positional_embeddings} \
   --datasets.vla_data.use_delta_action ${use_delta_action} \
   --datasets.vla_data.data_root_dir ${data_root_dir} \
-  --datasets.vla_data.training_task_weights ${TRAINING_TASK_WEIGHTS} \
+  --datasets.vla_data.training_task_weights ${training_task_weights} \
   --datasets.vla_data.data_mix ${data_mix} \
   --datasets.vla_data.per_device_batch_size 4 \
-  --datasets.vla_data.return_vlm_inputs ${return_vlm_inputs} \
   --trainer.freeze_modules ${freeze_module_list} \
   --trainer.max_train_steps 400000 \
   --trainer.save_interval 5000 \
@@ -84,6 +83,4 @@ python lda/training/debug.py \
   --run_id ${run_id} \
   --wandb_project lda \
   --wandb_entity ${wandb_entity} \
-  --is_debug False
-
 

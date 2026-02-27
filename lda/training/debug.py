@@ -80,13 +80,13 @@ def set_seed(seed: int):
     logger.info(f"🌱 Random seed set to {seed}")
 
 
-def prepare_data(cfg) -> Tuple:
+def prepare_data(cfg):
     """Prepare training data (single process, no multiprocessing)"""
     logger.info(f"🔍 Creating VLA Dataset with Mixture `{cfg.datasets.vla_data.data_mix}`")
     
     # Force debug-friendly settings
     if cfg.is_debug:
-        cfg.datasets.vla_data.per_device_batch_size = min(2, cfg.datasets.vla_data.per_device_batch_size)
+        cfg.datasets.vla_data.per_device_batch_size = min(4, cfg.datasets.vla_data.per_device_batch_size)
         cfg.datasets.vla_data.num_workers = 0  # Disable multiprocessing for easy debugging
         cfg.trainer.max_train_steps = min(50, cfg.trainer.max_train_steps)
         logger.warning(f"⚠️ DEBUG MODE: batch_size={cfg.datasets.vla_data.per_device_batch_size}, max_steps={cfg.trainer.max_train_steps}")
@@ -97,15 +97,14 @@ def prepare_data(cfg) -> Tuple:
         vla_train_dataloader = build_dataloader(
             cfg=cfg, 
             dataset_py=cfg.datasets.vla_data.dataset_py,
-            num_workers=0  # Critical for debugging
         )
-        return vla_train_dataloader, None, None, None
+        return vla_train_dataloader
     else:
-        policy_train_dataloader, fd_train_dataloader, vg_train_dataloader, id_train_dataloader = build_multi_task_dataloader(
+        train_dataloader = build_multi_task_dataloader(
             cfg=cfg,
             dataset_py=cfg.datasets.vla_data.dataset_py,
         )
-        return policy_train_dataloader, fd_train_dataloader, vg_train_dataloader, id_train_dataloader
+        return train_dataloader
        
 
 def setup_optimizer_and_scheduler(model: nn.Module, cfg) -> Tuple:
@@ -136,14 +135,10 @@ def setup_optimizer_and_scheduler(model: nn.Module, cfg) -> Tuple:
 
 
 class VLATrainer(TrainerUtils):
-    def __init__(self, cfg, model: nn.Module, policy_train_dataloader, fd_train_dataloader, 
-                 vg_train_dataloader, id_train_dataloader, optimizer, lr_scheduler):
+    def __init__(self, cfg, model: nn.Module, train_dataloader, optimizer, lr_scheduler):
         self.config = cfg
         self.model = model
-        self.policy_train_dataloader = policy_train_dataloader
-        self.fd_train_dataloader = fd_train_dataloader
-        self.vg_train_dataloader = vg_train_dataloader
-        self.id_train_dataloader = id_train_dataloader
+        self.train_dataloader = train_dataloader
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
 
@@ -244,7 +239,7 @@ class VLATrainer(TrainerUtils):
 
         # Add LR and epoch
         metrics["learning_rate"] = self.lr_scheduler.get_last_lr()[0]
-        total_batches = len(self.policy_train_dataloader) if self.policy_train_dataloader else 1
+        total_batches = len(self.train_dataloader) if self.train_dataloader else 1
         metrics["epoch"] = self.completed_steps / total_batches
 
         # Console output
@@ -258,46 +253,22 @@ class VLATrainer(TrainerUtils):
 
     def _create_data_iterators(self):
         """Create data iterators"""
-        if self.config.framework.name == "QwenGR00T":
-            self.policy_iter = iter(self.policy_train_dataloader)
-        else:
-            self.policy_iter = iter(self.policy_train_dataloader)
-            self.fd_iter = iter(self.fd_train_dataloader)
-            self.vg_iter = iter(self.vg_train_dataloader)
-            self.id_iter = iter(self.id_train_dataloader)
+        self.train_iter = iter(self.train_dataloader)
 
     def _get_next_batch(self):
         """Get next batch with automatic reset"""
-        if self.config.framework.name == "QwenGR00T":
-            try:
-                batch = next(self.policy_iter)
-            except StopIteration:
-                self.policy_iter = iter(self.policy_train_dataloader)
-                batch = next(self.policy_iter)
-            return batch, None, None, None
-
         try:
-            batch_policy = next(self.policy_iter)
-            batch_fd = next(self.fd_iter)
-            batch_vg = next(self.vg_iter)
-            batch_id = next(self.id_iter)
+            batch_vla = next(self.train_iter)
         except StopIteration:
-            self.policy_iter = iter(self.policy_train_dataloader)
-            self.fd_iter = iter(self.fd_train_dataloader)
-            self.vg_iter = iter(self.vg_train_dataloader)
-            self.id_iter = iter(self.id_train_dataloader)
-            batch_policy = next(self.policy_iter)
-            batch_fd = next(self.fd_iter)
-            batch_vg = next(self.vg_iter)
-            batch_id = next(self.id_iter)
+            self.train_iter = iter(self.train_dataloader)
+            if hasattr(self.train_dataloader, "batch_sampler") and callable(
+                getattr(self.train_dataloader.batch_sampler, "set_epoch", None)
+            ):
+                epoch = self.completed_steps // max(len(self.train_dataloader), 1)
+                self.train_dataloader.batch_sampler.set_epoch(epoch)
+            batch_vla = next(self.train_iter)
 
-        # Assign task types
-        for d in batch_policy: d['assigned_task'] = "policy"
-        for d in batch_fd: d['assigned_task'] = "forward_dynamics"
-        for d in batch_vg: d['assigned_task'] = "video_gen"
-        for d in batch_id: d['assigned_task'] = "inverse_dynamics"
-        
-        return batch_policy + batch_fd + batch_vg + batch_id, None, None, None
+        return batch_vla, None, None, None
 
     def train(self):
         """Main training loop (pure PyTorch)"""
@@ -483,7 +454,7 @@ def main(cfg) -> None:
     
     # Prepare data
     logger.info("🔍 Preparing data loaders...")
-    policy_dl, fd_dl, vg_dl, id_dl = prepare_data(cfg)
+    train_dl = prepare_data(cfg)
     logger.info("✅ Data loaders ready")
     
     # Setup optimizer
@@ -495,10 +466,7 @@ def main(cfg) -> None:
     trainer = VLATrainer(
         cfg=cfg,
         model=model,
-        policy_train_dataloader=policy_dl,
-        fd_train_dataloader=fd_dl,
-        vg_train_dataloader=vg_dl,
-        id_train_dataloader=id_dl,
+        train_dataloader=train_dl,
         optimizer=optimizer,
         lr_scheduler=lr_scheduler,
     )

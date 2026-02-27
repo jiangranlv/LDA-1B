@@ -7,6 +7,7 @@ import numpy as np
 import torch.distributed as dist
 from pathlib import Path
 from functools import partial
+from lda.dataloader.task_batch_sampler import DistributedTaskBatchSampler
 from lda.dataloader.vlm_datasets import make_vlm_dataloader
 from lda.dataloader.lerobot_datasets import get_vla_dataset, collate_fn, collate_fn_Qwen2_5, collate_fn_Qwen3
 TRAINING_TASKS = ["policy", "forward_dynamics", "inverse_dynamics", "video_gen"]
@@ -33,7 +34,7 @@ def save_dataset_statistics(dataset_statistics, run_dir):
         json.dump(dataset_statistics, f_json, indent=2)
     logger.info(f"Saved dataset statistics file at path {out_path}")
 
-def build_dataloader(cfg, dataset_py="lerobot_datasets_oxe"): # TODO now here only is get dataset, we need mv dataloader to here
+def build_dataloader(cfg, dataset_py="lerobot_datasets_oxe", num_workers=4): # TODO now here only is get dataset, we need mv dataloader to here
 
     if dataset_py == "lerobot_datasets":
         vla_dataset_cfg = cfg.datasets.vla_data
@@ -46,7 +47,7 @@ def build_dataloader(cfg, dataset_py="lerobot_datasets_oxe"): # TODO now here on
             vla_dataset,
             batch_size=cfg.datasets.vla_data.per_device_batch_size,
             collate_fn=collate,
-            num_workers=4,
+            num_workers=num_workers,
             # shuffle=True
         )        
         if dist.get_rank() == 0: 
@@ -61,7 +62,7 @@ def build_dataloader(cfg, dataset_py="lerobot_datasets_oxe"): # TODO now here on
         return vlm_train_dataloader
 
 
-def build_multi_task_dataloader(cfg, dataset_py="lerobot_datasets_oxe"): # TODO now here only is get dataset, we need mv dataloader to here
+def build_multi_task_dataloader(cfg, dataset_py="lerobot_datasets_oxe", num_workers=8): # TODO now here only is get dataset, we need mv dataloader to here
 
     if dataset_py == "lerobot_datasets":
         vla_dataset_cfg = cfg.datasets.vla_data
@@ -76,37 +77,23 @@ def build_multi_task_dataloader(cfg, dataset_py="lerobot_datasets_oxe"): # TODO 
             w_action_dataset = vla_dataset
             all_dataset = w_action_dataset
 
-        # training dataloader, each task has 1/4 of the batch size
-
-        # policy
-        policy_train_dataloader = DataLoader(
-            w_action_dataset,
-            batch_size=cfg.datasets.vla_data.per_device_batch_size // 4,
-            collate_fn=collate,
-            num_workers=1,
-        )
-        # forward_dynamics
-        fd_train_dataloader = DataLoader(
-            w_action_dataset,
-            batch_size=cfg.datasets.vla_data.per_device_batch_size // 4,
-            collate_fn=collate,
-            num_workers=1,
-        )
-
-        # video_gen
-        vg_train_dataloader = DataLoader(
+        # Use a single dataloader with a task-aware batch sampler to:
+        # 1) guarantee task coverage inside each batch
+        # 2) reduce duplicated worker/prefetch memory overhead
+        task_weights = cfg.datasets.vla_data.get("training_task_weights", [1.0] * len(TRAINING_TASKS))
+        sampler = DistributedTaskBatchSampler(
             all_dataset,
-            batch_size=cfg.datasets.vla_data.per_device_batch_size // 4,
-            collate_fn=collate,
-            num_workers=1,
+            batch_size=cfg.datasets.vla_data.per_device_batch_size,
+            tasks=TRAINING_TASKS,
+            task_weights=dict(zip(TRAINING_TASKS, task_weights)),
+            seed=cfg.seed,
+            drop_last=True,
         )
-
-        # inverse_dynamics
-        id_train_dataloader = DataLoader(
-            w_action_dataset,
-            batch_size=cfg.datasets.vla_data.per_device_batch_size // 4,
+        train_dataloader = DataLoader(
+            all_dataset,
+            batch_sampler=sampler,
             collate_fn=collate,
-            num_workers=1,
+            num_workers=num_workers,
         )
         if dist.is_initialized():
             if dist.get_rank() == 0: 
@@ -115,7 +102,7 @@ def build_multi_task_dataloader(cfg, dataset_py="lerobot_datasets_oxe"): # TODO 
         else:
             output_dir = Path(cfg.output_dir)
             vla_dataset.save_dataset_statistics(output_dir / "dataset_statistics.json")
-        return policy_train_dataloader, fd_train_dataloader, vg_train_dataloader, id_train_dataloader
+        return train_dataloader
     elif dataset_py == "vlm_datasets":
         vlm_data_module = make_vlm_dataloader(cfg)
         vlm_train_dataloader = vlm_data_module["train_dataloader"]

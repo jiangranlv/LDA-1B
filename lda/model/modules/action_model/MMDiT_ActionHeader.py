@@ -316,10 +316,6 @@ class FlowmatchingActionHeadConfig(PretrainedConfig):
     obs_loss_weight: float = field(
         default=1, metadata={"help": "Weight for observation loss"}
     )
-    training_task_weights: List[int] = field(
-        default_factory=lambda: [1, 1, 1, 1],
-        metadata={"help": "Weight for 4 training tasks"}
-    )
     future_obs_index: int = field(
         default=5, metadata={"help": "Index of future observation"}
     )
@@ -370,7 +366,6 @@ class FlowmatchingActionHead(nn.Module):
         self.vision_encoder_size = config.vision_encoder_size
         self.obs_loss_weight = config.obs_loss_weight
         self.num_views = config.num_views
-        self.training_task_weights = config.training_task_weights
 
         self.cross_attention_dim = config.diffusion_model_cfg['cross_attention_dim']
 
@@ -396,7 +391,7 @@ class FlowmatchingActionHead(nn.Module):
             )
             self.action_decoder = CategorySpecificMLP(
                 num_categories=config.max_num_embodiments,
-                input_dim=self.hidden_size,
+                input_dim=self.model.config.output_dim,
                 hidden_dim=self.hidden_size,
                 output_dim=self.action_dim,
             )
@@ -702,7 +697,7 @@ class FlowmatchingActionHead(nn.Module):
         inverse_action = actions[inverse_dynamics_indices]
         
         to_noise_action = torch.cat((policy_action, inverse_action), dim=0)
-        act_t_sample = self.sample_time(to_noise_action.shape[0], device=device, dtype=vl_embs.dtype).squeeze()
+        act_t_sample = self.sample_time(to_noise_action.shape[0], device=device, dtype=vl_embs.dtype).reshape(-1)
         action_noise = torch.randn_like(to_noise_action)
         act_t_sample = act_t_sample[:, None, None]
          # noisy action
@@ -726,7 +721,7 @@ class FlowmatchingActionHead(nn.Module):
         video_gen_obs = next_obs[video_gen_indices]
 
         to_noise_next_obs = torch.cat((forward_obs, video_gen_obs), dim=0)
-        obs_t_sample = self.sample_time(to_noise_next_obs.shape[0], device=device, dtype=vl_embs.dtype).squeeze()
+        obs_t_sample = self.sample_time(to_noise_next_obs.shape[0], device=device, dtype=vl_embs.dtype).reshape(-1)
         if self.vision_encoder_type == "vae":
             obs_t = obs_t_sample[:, None, None, None, None, None]
             obs_t_discretized = (obs_t[:, 0, 0, 0, 0, 0] * self.num_timestep_buckets).long()
@@ -755,6 +750,24 @@ class FlowmatchingActionHead(nn.Module):
         noisy_next_obs = torch.cat((policy_obs_feat, inv_obs_feat, noisy_obs), dim=0)    # (B, N_obs, D)
         diffusion_t = torch.cat((act_t_discretized, obs_t_discretized), dim=0)          # (B,)    
         task_embedding = torch.cat((policy_embedding, id_embedding, fd_embedding, vg_embedding), dim=0)
+        ordered_indices = pred_action_task_indices + pred_next_obs_task_indices
+        if len(ordered_indices) != B:
+            raise ValueError(
+                f"Task partition size mismatch: got {len(ordered_indices)} samples for batch size {B}"
+            )
+        ordered_indices_t = torch.as_tensor(ordered_indices, device=device, dtype=torch.long)
+
+        # Reorder all condition inputs to match the task-grouped sample order used above.
+        vl_embs = vl_embs.index_select(0, ordered_indices_t)
+        curr_obs = curr_obs.index_select(0, ordered_indices_t)
+        if encoder_attention_mask is not None:
+            encoder_attention_mask = encoder_attention_mask.index_select(0, ordered_indices_t)
+        if embodiment_id is not None:
+            embodiment_id = embodiment_id.index_select(0, ordered_indices_t)
+        if state_features is not None:
+            state_features = state_features.index_select(0, ordered_indices_t)
+        if history_actions is not None:
+            history_action_features = history_action_features.index_select(0, ordered_indices_t)
         # === 6. 构建完整输入序列 ===
         register_tokens = self.register_tokens.weight.unsqueeze(0).expand(B, -1, -1)
 
@@ -979,7 +992,7 @@ class FlowmatchingActionHead(nn.Module):
             curr_obs = rearrange(curr_obs, "(b v t) c h w -> b v c t h w", b=B, v=V)
             H, W = curr_obs.shape[-2:]
 
-        num_obs_tokens = curr_obs.shape[1] // T // self.num_views
+        num_obs_tokens = curr_obs.shape[1]
         # === 2. Initialize noisy next obs (sample from N(0, I)) ===
         next_obs = torch.randn(
             size=(B, num_obs_tokens, self.vision_encoder.config.hidden_size),

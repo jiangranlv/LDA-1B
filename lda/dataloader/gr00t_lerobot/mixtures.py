@@ -100,6 +100,102 @@ DATASET_NAMED_MIXTURES = {
 
     "demo_data": [
         ("sim_pick_place", 1.0, "demo_data"),
+    ],
+
+    "all_dataset":[
+        ("world_model/data/RobotData/2025-challenge-demos", 1.0, "r1pro"),
+        ("world_model/data/RobotData/AgiBotWorld-Beta2.1", 1.0, "agibot_gripper"),
+        ("world_model/data/RobotData/AgiBotWorld-Beta2.1_2", 1.0, "agibot_dex"),
+        ("world_model/data/RobotData/AgiBotWorld-Beta2.1_3", 1.0, "agibot_gripper"),
+
+        ("world_model/data/RobotData/Galaxea", 1.0, "galaxea"),
+        ("world_model/data/RobotData/droid", 1.0, "droid"), 
+        ("world_model/data/RobotData/droid_2", 1.0, "droid"), 
+        ("world_model/data/RobotData/Humanoid_everyday_10hz", 1.0, "unitree"),
+        ("world_model/data/RobotData/InternData-A1/sim/articulation_tasks/franka", 1.0, "intern_franka"),
+        ("world_model/data/RobotData/InternData-A1/sim/articulation_tasks/lift2", 1.0, "intern_piper"),
+        ("world_model/data/RobotData/InternData-A1/sim/articulation_tasks/split_aloha", 1.0, "intern_piper"),
+        ("world_model/data/RobotData/InternData-A1/real/genie1", 1.0, "intern_genie1"),
+
+        ("world_model/data/RobotData/InternData-A1/sim/basic_tasks/franka", 1.0, "intern_franka"),
+        ("world_model/data/RobotData/InternData-A1/sim/basic_tasks/genie1", 1.0, "intern_genie1"),
+        ("world_model/data/RobotData/InternData-A1/sim/basic_tasks/lift2", 1.0, "intern_piper"),
+        ("world_model/data/RobotData/InternData-A1/sim/basic_tasks/split_aloha", 1.0, "intern_piper"),
+
+        ("world_model/data/RobotData/InternData-A1/sim/long_horizon_tasks/franka", 1.0, "intern_franka"),
+        ("world_model/data/RobotData/InternData-A1/sim/long_horizon_tasks/lift2", 1.0, "intern_piper"),
+        ("world_model/data/RobotData/InternData-A1/sim/long_horizon_tasks/split_aloha", 1.0, "intern_piper"),
+
+
+        ("world_model/data/RobotData/InternData-A1/sim/pick_and_place_tasks/franka", 1.0, "intern_franka"),
+        ("world_model/data/RobotData/InternData-A1/sim/pick_and_place_tasks/genie1", 1.0, "intern_genie1"),
+        ("world_model/data/RobotData/InternData-A1/sim/pick_and_place_tasks/lift2", 1.0, "intern_piper"),
+        ("world_model/data/RobotData/InternData-A1/sim/pick_and_place_tasks/split_aloha", 1.0, "intern_piper"),
+
+        ("world_model/data/RobotData/InternData-A1/sim_updated/basic_tasks/franka", 1.0, "intern_franka"),
+        ("world_model/data/RobotData/InternData-A1/sim_updated/basic_tasks/genie1", 1.0, "intern_genie1"),
+
+        ("world_model/data/RobotData/InternData-A1/sim_updated/articulation_tasks/franka", 1.0, "intern_franka"),
+        ("world_model/data/RobotData/InternData-A1/sim_updated/articulation_tasks/lift2", 1.0, "intern_piper"),
+        ("world_model/data/RobotData/InternData-A1/sim_updated/articulation_tasks/split_aloha", 1.0, "intern_piper"),
+
+        ("world_model/data/RobotData/open-x-embodiment", 1.0, "oxe"),
+
+        ("world_model/data/RobotData/RoboCOIN_g1edu", 1.0, "robocoin_g1edu"),
+        ("world_model/data/RobotData/RoboCOIN_leju", 1.0, "robocoin_leju"),
+        ("world_model/data/RobotData/RoboCOIN_r1lite", 1.0, "robocoin_r1lite"),
+        ("world_model/data/RobotData/RoboMIND_postprocessed/benchmark1_0_compressed/agilex_3rgb", 1.0, "agilex"),
+        ("world_model/data/RobotData/RoboMIND_postprocessed/benchmark1_0_compressed/franka_1rgb", 1.0, "robomind_franka"),
+        ("world_model/data/RobotData/RoboMIND_postprocessed/benchmark1_0_compressed/franka_3rgb", 1.0, "robomind_franka"),
+        ("world_model/data/RobotData/RoboMIND_postprocessed/benchmark1_0_compressed/simulation", 1.0, "robomind_franka"),
+        ("world_model/data/RobotData/RoboMIND_postprocessed/benchmark1_0_compressed/tienkung_gello_1rgb", 1.0, "tienkung_gello"),
+        ("world_model/data/RobotData/RoboMIND_postprocessed/benchmark1_0_compressed/tienkung_xsens_1rgb", 1.0, "tienkung_xsens"),
+        ("world_model/data/RobotData/RoboMIND_postprocessed/benchmark1_0_compressed/ur_1rgb",  1.0, "ur"),
+
+        ("world_model/data/RobotData/RoboMIND_postprocessed/benchmark1_1_compressed/agilex_3rgb", 1.0, "agilex"),
+        ("world_model/data/RobotData/RoboMIND_postprocessed/benchmark1_1_compressed/franka_3rgb", 1.0, "robomind_franka"),
+        ("world_model/data/RobotData/RoboMIND_postprocessed/benchmark1_1_compressed/franka_fr3_dual", 1.0, "robomind_franka_dual"),
+        ("world_model/data/RobotData/RoboMIND_postprocessed/benchmark1_1_compressed/sim_franka_3rgb", 1.0, "robomind_franka"),
+        ("world_model/data/RobotData/RoboMIND_postprocessed/benchmark1_1_compressed/sim_tienkung_1rgb", 1.0, "tienkung_xsens"),
+        ("world_model/data/RobotData/RoboMIND_postprocessed/benchmark1_1_compressed/tienkung_gello_1rgb", 1.0, "tienkung_gello"),
+        ("world_model/data/RobotData/RoboMIND_postprocessed/benchmark1_1_compressed/tienkung_prod1_gello_1rgb", 1.0, "tienkung_gello"),
+        ("world_model/data/RobotData/RoboMIND_postprocessed/benchmark1_1_compressed/tienkung_xsens_1rgb", 1.0, "tienkung_xsens"),
+        ("world_model/data/RobotData/RoboMIND_postprocessed/benchmark1_1_compressed/ur_1rgb",  1.0, "ur"),
+
+        ("world_model/data/RobotData/RoboMIND_postprocessed/benchmark1_2_compressed/franka_3rgb", 1.0, "robomind_franka"),
+        
+        ("world_model/data/HumanData/EgoDex", 1.0, "egodex"),
+        ("world_model/data/HumanData/HOI4D", 1.0, "hoi4d"),
+        ("world_model/data/HumanData/HoloAssist", 1.0, "holo_assist"),
+        ("world_model/data/HumanData/hot3d", 1.0, "hot3d"),
+        ("world_model/data/HumanData/oakink2", 1.0, "oakink"),
+        ("world_model/data/HumanData/sea-small", 1.0, "seasmall"),
+        ("world_model/data/HumanData/TACO", 1.0, "taco"),
+        ("world_model/data/HumanData/TASTE-Rob", 1.0, "taste_rob"),
+
+        ("world_model/data/HumanData/egoexo4d", 1.0, "vitra"),
+        ("world_model/data/epic_kitchen", 1.0, "vitra"),
+        ("world_model/data/ego4d/ego4d_cooking_and_cleaning", 1.0, "vitra"),
+        ("world_model/data/ego4d/ego4d_cooking_and_cleaning_part2", 1.0, "vitra"),
+        ("world_model/data/ego4d/ego4d_cooking_and_cleaning_part3", 1.0, "vitra"),
+        ("world_model/data/ego4d/ego4d_cooking_and_cleaning_part4", 1.0, "vitra"),
+        ("world_model/data/ego4d/ego4d_cooking_and_cleaning_part5", 1.0, "vitra"),
+        ("world_model/data/ego4d/ego4d_cooking_and_cleaning_part6", 1.0, "vitra"),
+        ("world_model/data/ego4d/ego4d_cooking_and_cleaning_part7", 1.0, "vitra"),
+        ("world_model/data/ego4d/ego4d_cooking_and_cleaning_part8", 1.0, "vitra"),
+        ("world_model/data/ego4d/ego4d_cooking_and_cleaning_part9", 1.0, "vitra"),
+        ("world_model/data/ego4d/ego4d_cooking_and_cleaning_part10", 1.0, "vitra"),
+        ("world_model/data/ego4d/ego4d_cooking_and_cleaning_part11", 1.0, "vitra"),
+        ("world_model/data/ego4d/ego4d_other", 1.0, "vitra"),
+        ("world_model/data/ego4d/ego4d_other_part2", 1.0, "vitra"),
+        ("world_model/data/ego4d/ego4d_other_part3", 1.0, "vitra"),
+        ("world_model/data/ego4d/ego4d_other_part4", 1.0, "vitra"),
+        ("world_model/data/ego4d/ego4d_other_part5", 1.0, "vitra"),
+        ("world_model/data/ego4d/ego4d_other_part6", 1.0, "vitra"),
+
+        ("world_model/data/RobotData/RH20T", 1.0, "rh20t"),
+
+        ("public/world_model/RawData/egocentric-10k/egocentric-10k_extracted", 1.0, "egocentric_10k")
     ]
 
 }

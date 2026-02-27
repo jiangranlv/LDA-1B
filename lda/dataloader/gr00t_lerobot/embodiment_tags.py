@@ -106,14 +106,22 @@ class EmbodimentTag(Enum):
 
     RH20T = "rh20t"
 
+DEFAULT_TRAINING_TASKS = ["policy", "forward_dynamics", "inverse_dynamics", "video_gen"]
+
 TASK_MAPPING = {
-    # define trainable tasks for different datasets
-    EmbodimentTag.EGOVLA.value: ['policy', 'forward_dynamics', 'inverse_dynamics', 'video_gen'],
-    EmbodimentTag.GR1.value: ['policy', 'forward_dynamics', 'inverse_dynamics', 'video_gen'],
-    EmbodimentTag.GALBOT.value: ['policy', 'forward_dynamics', 'inverse_dynamics', 'video_gen'],
-    EmbodimentTag.EGOCENTRIC_10K.value: ['video_gen'],
-    EmbodimentTag.TASTE_Rob.value: ['video_gen']
+    # Default: every embodiment supports all trainable tasks.
+    embodiment.value: list(DEFAULT_TRAINING_TASKS)
+    for embodiment in EmbodimentTag
 }
+
+# Dataset-specific task constraints / overrides.
+TASK_MAPPING.update(
+    {
+        EmbodimentTag.EGOCENTRIC_10K.value: ["video_gen"],
+        EmbodimentTag.TASTE_Rob.value: ["video_gen"],
+        EmbodimentTag.RH20T.value: ["video_gen"],
+    }
+)
 
 # Embodiment tag string: to projector index in the Action Expert Module
 EMBODIMENT_TAG_MAPPING = {

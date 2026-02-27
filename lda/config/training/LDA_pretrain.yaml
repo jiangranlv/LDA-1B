@@ -17,7 +17,7 @@ framework:
 
   action_model:
     action_model_type: DiT-B
-    hidden_size: 2560     # 和 DiT 最后的 projection 对应，用于 ActionDecoder
+    hidden_size: 2560     
     add_pos_embed: True
     max_seq_len: 1024
     action_dim: 29
@@ -42,7 +42,6 @@ framework:
     future_obs_index: 5
     only_policy: false
     obs_loss_weight: 1.0
-    training_task_weights: [1, 1, 1, 1]
     diffusion_model_cfg:    # DiT Transformers 的参数
       cross_attention_dim: 2048 # VLM 的 dim
       dropout: 0.2
@@ -50,7 +49,7 @@ framework:
       interleave_self_attention: true
       norm_type: "ada_norm"
       num_layers: 8
-      output_dim: 2560
+      output_dim: 2560 # 和 DiT 最后的 projection 对应，用于 ActionDecoder
       positional_embeddings: null
 
 
@@ -71,8 +70,8 @@ datasets:
 
   vla_data:
     dataset_py: lerobot_datasets
-    data_root_dir: playground/Datasets/PhysicalAI-Robotics-GR00T-X-Embodiment-Sim
-    data_mix: fourier_gr1_unified_1000 # bridge_rt_1
+    data_root_dir: /mnt/home/liukai/code/LDA/playground/demo_data
+    data_mix: demo_data
     action_type: delta_ee
     CoT_prompt: "Your task is {instruction}. To identify the key objects for your task. Locate their bounding boxes in [x1,y1,x2,y2] format."
     CoT_answer: bbox

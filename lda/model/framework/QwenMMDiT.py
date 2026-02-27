@@ -315,6 +315,7 @@ class Qwen_MMDiT(baseframework):
 
         state = torch.from_numpy(np.array(state)).to(last_hidden.device, dtype=last_hidden.dtype) if state is not None else None
         history_actions = torch.from_numpy(np.array(history_actions)).to(last_hidden.device, dtype=last_hidden.dtype) if history_actions is not None else None
+        embodiment_ids = torch.from_numpy(np.array(embodiment_ids)).to(last_hidden.device, dtype=torch.int32)
         curr_imgs = curr_imgs.to(last_hidden.device, dtype=last_hidden.dtype)
         attention_mask = attention_mask.to(last_hidden.device, dtype=last_hidden.dtype)
         # Step 4: Action Expert Forward and Loss
