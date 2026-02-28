@@ -141,7 +141,6 @@ class VLATrainer(TrainerUtils):
         self.lr_scheduler = lr_scheduler
         self.accelerator = accelerator
 
-        # training status tracking
         self.completed_steps = 0
         self.total_batch_size = self._calculate_total_batch_size()
     

@@ -15,15 +15,15 @@ vision_encoder_path=/mnt/home/liukai/World-Action-Model/pretrained # should be t
 
 freeze_module_list='qwen_vl_interface,action_model.vision_encoder' # just for fast debug, sota is under fully FT, i.g., freeze_module_list=""
 DIT_TYPE="DiT-B"
-data_root_dir=/mnt/home/liukai/code/LDA/playground/demo_data
-data_mix=demo_data # should be recorded in data_config.py
+data_root_dir=/mnt/project
+data_mix=all_dataset # should be recorded in data_config.py
 
-obs_horizon=1
+obs_horizon=2
 state_dim=null
-action_dim=12
+action_dim=138
 max_num_embodiments=1
 num_layers=8
-use_delta_action=false
+use_delta_action=true
 positional_embeddings=null
 
 repeated_diffusion_steps=1

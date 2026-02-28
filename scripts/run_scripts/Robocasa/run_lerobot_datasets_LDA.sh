@@ -46,7 +46,6 @@ mkdir -p ${output_dir}
 cp $0 ${output_dir}/
 
 accelerate launch \
-  --config_file lda/config/deepseeds/deepspeed_zero2.yaml \
   --num_processes 8 \
   lda/training/train_lda.py \
   --config_yaml lda/config/training/lda_robocasa.yaml \
@@ -80,5 +79,4 @@ accelerate launch \
   --wandb_project lda \
   --wandb_entity ${wandb_entity} \
   --is_debug False
-
 

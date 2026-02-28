@@ -580,7 +580,25 @@ class Challange2025DataConfig(BaseDataConfig):
     pass
 
 class RH20TDataConfig(BaseDataConfig):
-    pass
+    def modality_config(self):
+        video_modality = ModalityConfig(
+            delta_indices=self.observation_indices,
+            modality_keys=self.video_keys,
+        )
+        future_video_modality = ModalityConfig(
+            delta_indices=self.future_observation_indices,
+            modality_keys=self.future_video_keys,
+        )
+        language_modality = ModalityConfig(
+            delta_indices=self.observation_indices,
+            modality_keys=self.language_keys,
+        )
+        modality_configs = {
+            "video": video_modality,
+            "language": language_modality,
+            "future_video": future_video_modality,
+        }
+        return modality_configs
 
 # Human Data Config
 class VitraDataConfig(HumanBaseDataConfig):
@@ -709,10 +727,6 @@ class EgoCentric10KDataConfig(HumanBaseDataConfig):
         future_video_modality = ModalityConfig(
             delta_indices=self.future_observation_indices,
             modality_keys=self.future_video_keys,
-        )
-        state_modality = ModalityConfig(
-            delta_indices=self.observation_indices,
-            modality_keys=self.state_keys,
         )
         language_modality = ModalityConfig(
             delta_indices=self.observation_indices,

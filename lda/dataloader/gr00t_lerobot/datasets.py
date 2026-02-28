@@ -26,6 +26,7 @@ See `scripts/load_dataset.py` for examples on how to use these datasets.
 import os
 import hashlib
 import json, torch
+import math
 from tkinter import N
 from collections import defaultdict
 from pathlib import Path
@@ -1871,7 +1872,7 @@ class LeRobotMixtureDataset(Dataset):
                 if self.mode == "train":
                     rng = np.random.default_rng(self.seed)
                     rng.shuffle(self._step_order[-1])
-                self._step_pos.append(0)
+                self._step_pos.append(self.rank)
 
         # Build task -> candidate dataset mapping for task-aware batch samplers.
         self.dataset_supported_tasks = []
@@ -1944,41 +1945,42 @@ class LeRobotMixtureDataset(Dataset):
         dataset_index = int(candidate_indices[picked])
         return dataset_index, self.datasets[dataset_index]
 
+    def _deterministic_step_index(
+        self,
+        dataset_length: int,
+        global_index: int,
+        dataset_index: int,
+        task: str | None,
+    ) -> int:
+        """Map global index to a dataset step with low collision rate (no state)."""
+        if dataset_length <= 1:
+            return 0
+
+        task_key = task if task is not None else "__none__"
+        base_seed = safe_hash((self.epoch, self.seed, dataset_index, task_key))
+        offset = base_seed % dataset_length
+
+        # Build a stride coprime with dataset_length, yielding a full-cycle permutation.
+        stride = (safe_hash((base_seed, "stride")) % (dataset_length - 1)) + 1
+        while math.gcd(stride, dataset_length) != 1:
+            stride = (stride % dataset_length) + 1
+        return int((offset + (global_index % dataset_length) * stride) % dataset_length)
+
     def sample_step(self, index: int, task: str | None = None):
-        seed = index if self.mode != "train" else safe_hash((self.epoch, index, self.seed, self.rank))
+        stream_rank, stream_size = self._distributed_step_stream()
+        global_index = index * stream_size + stream_rank
+        seed = global_index if self.mode != "train" else safe_hash((self.epoch, global_index, self.seed, task))
         rng = np.random.default_rng(seed)
 
         dataset_index, dataset = self._sample_dataset_for_task(rng, task)
 
-        if not self._sequential_step_sampling:
-            single_step_index = rng.choice(len(dataset.all_steps))
-        else:
-            rank_offset, rank_stride = self._distributed_step_stream()
-            step_pos = self._step_pos[dataset_index]
-            if step_pos >= len(dataset.all_steps):
-                order = np.arange(len(dataset.all_steps))
-                if self.mode == "train":
-                    seed = safe_hash((self.epoch, dataset_index, self.seed, step_pos))
-                    rng = np.random.default_rng(seed)
-                    rng.shuffle(order)
-                self._step_order[dataset_index] = order
-                step_pos = 0
-
-            order = self._step_order[dataset_index]
-            shard_pos = step_pos * rank_stride + rank_offset
-            if shard_pos >= len(order):
-                # Start a new local cycle when this rank/worker shard is exhausted.
-                order = np.arange(len(dataset.all_steps))
-                if self.mode == "train":
-                    seed = safe_hash((self.epoch, dataset_index, self.seed, step_pos, rank_stride))
-                    rng = np.random.default_rng(seed)
-                    rng.shuffle(order)
-                self._step_order[dataset_index] = order
-                step_pos = 0
-                shard_pos = rank_offset
-
-            single_step_index = order[shard_pos]
-            self._step_pos[dataset_index] = step_pos + 1
+        # Stateless step mapping avoids worker-local mutable counters causing duplicates.
+        single_step_index = self._deterministic_step_index(
+            dataset_length=len(dataset.all_steps),
+            global_index=global_index,
+            dataset_index=dataset_index,
+            task=task,
+        )
         trajectory_id, base_index = dataset.all_steps[single_step_index]
 
         return dataset, trajectory_id, base_index
@@ -2004,7 +2006,7 @@ class LeRobotMixtureDataset(Dataset):
 
     def get_next_state(self, raw_data, key, history_action_indices=None):
         if history_action_indices is not None:
-            history_data = raw_data[key][1:len(history_action_indices)]
+            history_data = raw_data[key][1:(len(history_action_indices)+1)]
             pred_data = raw_data[key][len(history_action_indices)+1:]
             raw_data[key] = np.concatenate([history_data, pred_data], axis=0)
         else:
@@ -2015,20 +2017,20 @@ class LeRobotMixtureDataset(Dataset):
         if 'action.left_eef_position' not in raw_data.keys():
             return raw_data
         if history_action_indices is not None:
-            history_action_left_eef_position = raw_data['action.left_eef_position'][:len(history_action_indices)]
-            history_action_left_eef_rotation = raw_data['action.left_eef_rotation'][:len(history_action_indices)]
+            history_action_left_eef_position = raw_data['action.left_eef_position'][:(len(history_action_indices)+1)]
+            history_action_left_eef_rotation = raw_data['action.left_eef_rotation'][:(len(history_action_indices)+1)]
             if "action.right_eef_position" in raw_data.keys():
-                history_action_right_eef_position = raw_data['action.right_eef_position'][:len(history_action_indices)]
-                history_action_right_eef_rotation = raw_data['action.right_eef_rotation'][:len(history_action_indices)]
+                history_action_right_eef_position = raw_data['action.right_eef_position'][:(len(history_action_indices)+1)]
+                history_action_right_eef_rotation = raw_data['action.right_eef_rotation'][:(len(history_action_indices)+1)]
                 history_delta_eef_left, history_delta_eef_right = self.calculate_delta_action(history_action_left_eef_position, history_action_left_eef_rotation, history_action_right_eef_position, history_action_right_eef_rotation)
             else:
                 history_delta_eef_left = self.calculate_delta_action(history_action_left_eef_position, history_action_left_eef_rotation, None, None)
             
             pred_action_left_eef_position = raw_data['action.left_eef_position'][len(history_action_indices):]
-            pred_action_left_eef_rotation = raw_data['action.left_eef_rotation'][len(history_action_left_eef_rotation):]
+            pred_action_left_eef_rotation = raw_data['action.left_eef_rotation'][len(history_action_indices):]
             if "action.right_eef_position" in raw_data.keys():
-                pred_action_right_eef_position = raw_data['action.right_eef_position'][len(history_action_right_eef_position):]
-                pred_action_right_eef_rotation = raw_data['action.right_eef_rotation'][len(history_action_right_eef_rotation):]
+                pred_action_right_eef_position = raw_data['action.right_eef_position'][len(history_action_indices):]
+                pred_action_right_eef_rotation = raw_data['action.right_eef_rotation'][len(history_action_indices):]
                 pred_delta_eef_left, pred_delta_eef_right = self.calculate_delta_action(pred_action_left_eef_position, pred_action_left_eef_rotation, pred_action_right_eef_position, pred_action_right_eef_rotation)
                 delta_eef_right = np.concatenate([history_delta_eef_right, pred_delta_eef_right], axis=0)
                 delta_eef_left = np.concatenate([history_delta_eef_left, pred_delta_eef_left], axis=0)
@@ -2107,7 +2109,7 @@ class LeRobotMixtureDataset(Dataset):
                 if self.use_delta_action:
                     raw_data = self.get_delta_action_from_raw_data(raw_data, embodiment_tag, dataset.history_action_indices)
                     if dataset.history_action_indices is not None:
-                        history_len = len(dataset.history_action_indices) - 1
+                        history_len = len(dataset.history_action_indices)
                 data = dataset.transforms(raw_data)
                 
                 # Process all video keys dynamically
@@ -2156,7 +2158,7 @@ class LeRobotMixtureDataset(Dataset):
                             padded_history_action, history_mask = pad_action_state_with_key(data[action_key][:history_len], action_key, dataset_single_arm)
                             if f"{action_key}_mask" in data.keys():
                                 if self.use_delta_action:
-                                    wrist_mask = data[f"{action_key}_mask"].reshape(-1, 1)[history_len+2:] 
+                                    wrist_mask = data[f"{action_key}_mask"].reshape(-1, 1)[history_len+1:] 
                                     mask = mask & wrist_mask
                                 else:
                                     wrist_mask = data[f"{action_key}_mask"].reshape(-1, 1)[history_len:] 
