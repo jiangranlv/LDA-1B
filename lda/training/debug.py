@@ -86,8 +86,8 @@ def prepare_data(cfg):
     
     # Force debug-friendly settings
     if cfg.is_debug:
-        cfg.datasets.vla_data.per_device_batch_size = min(4, cfg.datasets.vla_data.per_device_batch_size)
-        cfg.datasets.vla_data.num_workers = 0  # Disable multiprocessing for easy debugging
+        cfg.datasets.vla_data.per_device_batch_size = min(48, cfg.datasets.vla_data.per_device_batch_size)
+        cfg.datasets.vla_data.num_workers = 8  # Disable multiprocessing for easy debugging
         cfg.trainer.max_train_steps = min(50, cfg.trainer.max_train_steps)
         logger.warning(f"⚠️ DEBUG MODE: batch_size={cfg.datasets.vla_data.per_device_batch_size}, max_steps={cfg.trainer.max_train_steps}")
 

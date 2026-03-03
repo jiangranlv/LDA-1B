@@ -20,9 +20,9 @@ export NCCL_ASYNC_ERROR_HANDLING=1
 export NCCL_TIMEOUT=1000  # timeout set to 1 hour (unit: seconds)
 
 # model path
-run_root_dir=/path/to/ckpt/dir
-run_id=/run/id
-steps=120000 # training steps
+run_root_dir=/mnt/project/world_model/checkpoints/lda
+run_id=pretrain_48_node_batch_sampler
+steps=140000 # training steps
 base_dir=${run_root_dir}/${run_id}
 model_path=${base_dir}/checkpoints/steps_${steps}_pytorch_model.pt
 
@@ -31,10 +31,10 @@ plot_state=false
 seed=42
 
 # datasets
-agibot_data_root=/path/to/dataset
-data_mix=/data/mix/name
+agibot_data_root=/mnt/project
+data_mix=test_dataset
 
-is_delta_action=false # trained using delta eef action or not
+is_delta_action=true # trained using delta eef action or not
 
 # eval config
 create_trajectory_video=true
@@ -42,9 +42,10 @@ video_output_path=${base_dir}/trajectory_video/steps_${steps}
 mkdir -p ${video_output_path}
 
 # eval trajs
-trajs=2 # total eval trajs
+trajs=5 # total eval trajs
 start_traj=0
 end_traj=10000000
+max_eval_steps=400 # max eval steps for each trajectory, set to a large number to evaluate on the whole trajectory
 
 plot=true
 plot_path=${base_dir}/results/steps_${steps}
@@ -53,7 +54,7 @@ plot_path=${base_dir}/results/steps_${steps}
 gt_traj_dir=${plot_path}
 traj_names=GT,Pred
 
-python lda/eval/eval_policy.py \
+python /mnt/home/liukai/code/LDA/lda/eval/eval_policy.py \
   --config_yaml ${base_dir}/config.yaml \
   --save_plot_path ${base_dir}/plots \
   --seed ${seed} \
@@ -72,6 +73,7 @@ python lda/eval/eval_policy.py \
   --evaluation.trajs ${trajs} \
   --evaluation.start_traj ${start_traj} \
   --evaluation.end_traj ${end_traj} \
+  --evaluation.max_eval_steps ${max_eval_steps} \
   --is_delta_action ${is_delta_action}
 
 

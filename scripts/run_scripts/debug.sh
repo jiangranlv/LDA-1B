@@ -16,7 +16,7 @@ vision_encoder_path=/mnt/home/liukai/World-Action-Model/pretrained # should be t
 freeze_module_list='qwen_vl_interface,action_model.vision_encoder' # just for fast debug, sota is under fully FT, i.g., freeze_module_list=""
 DIT_TYPE="DiT-B"
 data_root_dir=/mnt/project
-data_mix=all_dataset # should be recorded in data_config.py
+data_mix=galbot_pick_vegetable # should be recorded in data_config.py
 
 obs_horizon=2
 state_dim=null
@@ -48,8 +48,8 @@ mkdir -p ${output_dir}
 # mv this script to the output dir
 cp $0 ${output_dir}/
 
-python lda/training/debug.py \
-  --config_yaml lda/config/training/LDA_pretrain.yaml \
+python /mnt/home/liukai/code/LDA/lda/training/debug.py \
+  --config_yaml /mnt/home/liukai/code/LDA/lda/config/training/LDA_pretrain.yaml \
   --debug \
   --framework.name ${Framework_name} \
   --framework.qwenvl.base_vlm ${base_vlm} \
@@ -70,7 +70,7 @@ python lda/training/debug.py \
   --datasets.vla_data.data_root_dir ${data_root_dir} \
   --datasets.vla_data.training_task_weights ${training_task_weights} \
   --datasets.vla_data.data_mix ${data_mix} \
-  --datasets.vla_data.per_device_batch_size 4 \
+  --datasets.vla_data.per_device_batch_size 48 \
   --trainer.freeze_modules ${freeze_module_list} \
   --trainer.max_train_steps 400000 \
   --trainer.save_interval 5000 \

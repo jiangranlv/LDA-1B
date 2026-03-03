@@ -225,6 +225,8 @@ examples/unitree
 
 examples/SimplerEnv
 
+scripts/run_scripts/post_train
+
 .github
 
 lda/config/frameworks/*

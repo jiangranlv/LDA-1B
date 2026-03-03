@@ -88,6 +88,7 @@ def make_LeRobotSingleDataset(
     delete_pause_frame: bool = False,
     data_cfg: dict | None = None,
     CoT_prompt: str = None, 
+    action_dim: int = None,
 ) -> LeRobotSingleDataset | VideoTaskSingleDataset:
     """
     Make a LeRobotSingleDataset object.
@@ -144,6 +145,7 @@ def make_LeRobotSingleDataset(
             img_interval=img_interval,
             history_action_indices=history_action_indices,
             CoT_prompt=CoT_prompt,
+            action_dim=action_dim,
         )
 
 def get_vla_dataset(
@@ -182,10 +184,10 @@ def get_vla_dataset(
     all_dataset_mixture = []
     for d_name, d_weight, robot_type in filtered_mixture_spec:
         if d_name in VIDEOGEN_DATASET:
-            all_dataset_mixture.append((make_LeRobotSingleDataset(Path(data_root_dir), d_name, robot_type, delete_pause_frame=delete_pause_frame, data_cfg=data_cfg, CoT_prompt=CoT_prompt), d_weight))
+            all_dataset_mixture.append((make_LeRobotSingleDataset(Path(data_root_dir), d_name, robot_type, delete_pause_frame=delete_pause_frame, data_cfg=data_cfg, CoT_prompt=CoT_prompt, action_dim=action_dim), d_weight))
         else:
-            dataset_mixture.append((make_LeRobotSingleDataset(Path(data_root_dir), d_name, robot_type, delete_pause_frame=delete_pause_frame, data_cfg=data_cfg, CoT_prompt=CoT_prompt), d_weight))
-            all_dataset_mixture.append((make_LeRobotSingleDataset(Path(data_root_dir), d_name, robot_type, delete_pause_frame=delete_pause_frame, data_cfg=data_cfg, CoT_prompt=CoT_prompt), d_weight))
+            dataset_mixture.append((make_LeRobotSingleDataset(Path(data_root_dir), d_name, robot_type, delete_pause_frame=delete_pause_frame, data_cfg=data_cfg, CoT_prompt=CoT_prompt, action_dim=action_dim), d_weight))
+            all_dataset_mixture.append((make_LeRobotSingleDataset(Path(data_root_dir), d_name, robot_type, delete_pause_frame=delete_pause_frame, data_cfg=data_cfg, CoT_prompt=CoT_prompt, action_dim=action_dim), d_weight))
 
     w_action_dataset = LeRobotMixtureDataset(
         dataset_mixture,
@@ -218,8 +220,6 @@ def get_vla_dataset(
         return w_action_dataset
     else:
         return w_action_dataset, all_dataset
-
-
 
 if __name__ == "__main__":
 

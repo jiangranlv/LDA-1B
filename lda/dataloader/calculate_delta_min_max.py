@@ -91,8 +91,8 @@ modality_data ={
         }
     },
     "video": {
-        "top_head": {
-            "original_key": "observation.images.top_head"
+        "front_head_left": {
+            "original_key": "observation.images.front_head_left"
         }
     },
     "annotation": {

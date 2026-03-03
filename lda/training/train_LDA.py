@@ -167,11 +167,13 @@ class VLATrainer(TrainerUtils):
         self.print_trainable_parameters(self.model)
 
         # initialize distributed training components
-        self.model, self.optimizer, self.train_dataloader = self.setup_distributed_training(
+        # NOTE: keep dataloader unwrapped here because it already uses
+        # DistributedTaskBatchSampler for rank-aware sharding. Wrapping it
+        # again via accelerator.prepare can cause double-sharding.
+        self.model, self.optimizer = self.setup_distributed_training(
             self.accelerator,  # must be the first param
             self.model,
             self.optimizer,
-            self.train_dataloader,
         )
 
         self._init_wandb()
@@ -238,10 +240,13 @@ class VLATrainer(TrainerUtils):
         if pretrained_checkpoint:
             reload_modules = getattr(self.config.trainer, "reload_modules", None)
             self.model = self.load_pretrained_backbones(self.model, pretrained_checkpoint, reload_modules=reload_modules)
-            try:
-                self.completed_steps = int(re.search(r"steps_(\d+)_pytorch_model\.pt", pretrained_checkpoint).group(1))
-            except AttributeError:
-                logger.warning(f"Could not parse steps from pretrained checkpoint: {pretrained_checkpoint}")
+            if not getattr(self.config.trainer, "post_train", False):
+                try:
+                    self.completed_steps = int(re.search(r"steps_(\d+)_pytorch_model\.pt", pretrained_checkpoint).group(1))
+                except AttributeError:
+                    logger.warning(f"Could not parse steps from pretrained checkpoint: {pretrained_checkpoint}")
+                    self.completed_steps = 0
+            else:
                 self.completed_steps = 0
             self.resume_from_checkpoint = pretrained_checkpoint
             logger.info(f"Loaded pretrained checkpoint: {pretrained_checkpoint}, steps: {self.completed_steps}")
@@ -522,7 +527,6 @@ def main(cfg) -> None:
     logger.info("... and that's all, folks!")
     dist.barrier()
     dist.destroy_process_group()
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

@@ -91,7 +91,7 @@ def main(config):
             traj_chunk = traj_id // 1000
             original_video_path = f"{dataset.datasets[dataset_index].dataset_path}/videos/chunk-{traj_chunk:03d}/observation.images.top_head/episode_{traj_id:06d}.mp4"
             video_output_path = f"{config.evaluation.video_output_path}/chunk-{traj_chunk:03d}_episode_{traj_id:06d}.mp4"
-            eval_steps = dataset.datasets[dataset_index].trajectory_lengths[traj_id]
+            eval_steps = min(dataset.datasets[dataset_index].trajectory_lengths[traj_id], config.evaluation.max_eval_steps)
             l1_loss_dict = calc_mse_for_single_trajectory_relative_eef(
                 policy,
                 dataset.datasets[dataset_index],

@@ -39,8 +39,8 @@ AXIS_LENGTH = 0.1
 AXIS_THICKNESS = 2
 POINT_RADIUS = 5
 
-WO_GRIPPER_DATASET = ['human', 'egovla', 'ssv2', 'robocasa']
-MANO_HAND_DATASET = ['egovla', 'ssv2']
+WO_GRIPPER_DATASET = ['human', 'egovla', 'vitra', 'robocasa', 'egodex']
+MANO_HAND_DATASET = ['egovla', 'vitra', 'egodex']
 
 np.set_printoptions(precision=3, suppress=True)
 
@@ -395,16 +395,18 @@ def create_action_trajectory_video(
     
     return valid_frames > 0
 
-def get_abs_eef(action_chunk, data_point, wo_gripper):
+def get_abs_eef(action_chunk, data_point, wo_gripper, wo_mano):
 
     left_action_delta_pose = np.concatenate([action_chunk["action.left_eef_position"], action_chunk["action.left_eef_rotation"]], axis=1)
     left_initial_action_pose = np.concatenate([data_point["action"][0, :3], data_point["action"][0, 3:6]])
     left_action_abs_pose = delta2abs(left_action_delta_pose, left_initial_action_pose)
     right_action_delta_pose = np.concatenate([action_chunk["action.right_eef_position"], action_chunk["action.right_eef_rotation"]], axis=1)
-    if wo_gripper:
+    if wo_gripper and wo_mano:
         right_initial_action_pose = np.concatenate([data_point["action"][0, 6:9], data_point["action"][0, 9:12]])
-    else:
+    elif wo_mano:
         right_initial_action_pose = np.concatenate([data_point["action"][0, 7:10], data_point["action"][0, 10:13]])
+    else:
+        right_initial_action_pose = np.concatenate([data_point["action"][0, 69:72], data_point["action"][0, 72:75]])
     right_action_abs_pose = delta2abs(right_action_delta_pose, right_initial_action_pose)
 
     return left_action_abs_pose, right_action_abs_pose
@@ -520,7 +522,7 @@ def calc_mse_for_single_trajectory(
 
         if step_count % action_horizon == 0:
             if data_point is None:
-                data_point = dataset.get_step_data_with_transform(traj_id, step_count, None, policy.config.framework.qwenvl.base_vlm, return_state=return_state)
+                data_point = dataset.get_step_data_with_transform(traj_id, step_count, return_state=return_state)
 
             print("inferencing at step: ", step_count)
             batch = collate_fn([data_point])
@@ -552,8 +554,8 @@ def calc_mse_for_single_trajectory(
                 "right_eef_position", "right_eef_rotation"]
                 action_chunk = dataset.transforms.unapply({"action.left_eef_position": action_chunk[:, :3],
                     "action.left_eef_rotation": action_chunk[:, 3:6],
-                    "action.right_eef_position": action_chunk[:, 6:9],
-                    "action.right_eef_rotation": action_chunk[:, 9:12]})
+                    "action.right_eef_position": action_chunk[:, 69:72],
+                    "action.right_eef_rotation": action_chunk[:, 72:75]})
             else:
                 modality_keys = ["left_eef_position", "left_eef_rotation", "action.left_gripper",
                 "right_eef_position", "right_eef_rotation", "action.right_gripper",]
@@ -563,13 +565,15 @@ def calc_mse_for_single_trajectory(
                     "action.right_eef_position": action_chunk[:, 69:72],
                     "action.right_eef_rotation": action_chunk[:, 72:75],
                     "action.right_gripper": action_chunk[:, 75:76]})
-                left_action_abs_pose, right_action_abs_pose = get_abs_eef(action_chunk, data_point, wo_gripper)
-                if not wo_gripper:
-                    # if dataset._metadata.embodiment_tag.value == "agibot_alpha":
-                    #     action_chunk["action.left_gripper"] = 1 - action_chunk["action.left_gripper"]
-                    #     action_chunk["action.right_gripper"] = 1 - action_chunk["action.right_gripper"]
-                    left_action_gripper = np.concatenate([data_point["action"][0:1, 6:7], 1 - action_chunk["action.left_gripper"]])
-                    right_action_gripper = np.concatenate([data_point["action"][0:1, 13:14], 1 - action_chunk["action.right_gripper"]])
+            left_action_abs_pose, right_action_abs_pose = get_abs_eef(action_chunk, data_point, wo_gripper, wo_mano)
+            if not wo_gripper:
+                if "agibot_alpha" in dataset._metadata.embodiment_tag.value:
+                    action_chunk["action.left_gripper"] = 1 - action_chunk["action.left_gripper"]
+                    action_chunk["action.right_gripper"] = 1 - action_chunk["action.right_gripper"]
+                pred_left_gripper = action_chunk["action.left_gripper"]
+                pred_right_gripper = action_chunk["action.right_gripper"]
+                left_action_gripper = np.concatenate([data_point["action"][0:1, 6:7], pred_left_gripper])
+                right_action_gripper = np.concatenate([data_point["action"][0:1, 13:14], pred_right_gripper])
                     
             for j in range(action_horizon):
                 # predict action
@@ -598,7 +602,7 @@ def calc_mse_for_single_trajectory(
 
     states_list = []
     for step_count in range(steps):
-        data_point = dataset.get_step_data_with_transform(traj_id, step_count, None, policy.config.framework.qwenvl.base_vlm)
+        data_point = dataset.get_step_data_with_transform(traj_id, step_count, return_state=True)
         state = torch.from_numpy(data_point["state"][0])
         states_list.append(state)
     states_across_time = np.array(states_list)

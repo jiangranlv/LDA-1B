@@ -196,6 +196,19 @@ DATASET_NAMED_MIXTURES = {
         ("world_model/data/RobotData/RH20T", 1.0, "rh20t"),
 
         ("public/world_model/RawData/egocentric-10k/egocentric-10k_extracted", 1.0, "egocentric_10k")
-    ]
+    ],
+    "test_dataset":[
+        ("world_model/data/RobotData/pretrain_test_data", 1.0, "agibot_gripper"),
+        # ("world_model/data/RobotData/2025-challenge-demos", 1.0, "r1pro"),
+        # # ("world_model/data/RobotData/AgiBotWorld-Beta2.1_3", 1.0, "agibot_gripper"),
+        # # ("world_model/data/RobotData/AgiBotWorld-Beta2.1", 1.0, "agibot_gripper"),
+        # ("world_model/data/ego4d/ego4d_cooking_and_cleaning_part2", 1.0, "vitra"),
+        # # ("world_model/data/RobotData/InternData-A1/sim/articulation_tasks/franka", 1.0, "intern_franka"),
+        # ("world_model/data/HumanData/EgoDex", 1.0, "egodex"),
+    ],
+
+    "galbot_pick_vegetable": [
+        ("world_model/data/RealWorld/Galbot_Pick_Vegetable_2_eef", 1.0, "galbot"),
+    ],
 
 }

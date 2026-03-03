@@ -113,8 +113,8 @@ class BaseDataConfig(ABC):
                     "action.right_eef_position": "q99",
                     "action.left_eef_rotation": "q99",
                     "action.right_eef_rotation": "q99",
-                    "action.left_gripper": "q99",
-                    "action.right_gripper": "q99",
+                    "action.left_gripper": "binary",
+                    "action.right_gripper": "binary",
                     },
             ),
             # concat transforms
@@ -852,6 +852,13 @@ class DemoDataConfig:
         ]
         return ComposedModalityTransform(transforms=transforms)
 
+class GalbotDataConfig(BaseDataConfig):
+    video_backend = "torchvision_av"
+    video_keys = ["video.front_head_left"]
+    future_video_keys = [
+        "future_video.front_head_left"
+    ]
+
 ROBOT_TYPE_CONFIG_MAP = {
     "fourier_gr1_arms_waist": FourierGr1ArmsWaistDataConfig(),
     "fourier_gr1_eef": FourierGr1EEFDataConfig(),
@@ -892,5 +899,6 @@ ROBOT_TYPE_CONFIG_MAP = {
     "rh20t": RH20TDataConfig(),
 
     "demo_data": DemoDataConfig(),
+    "galbot": GalbotDataConfig(),
 }
 
