@@ -143,13 +143,12 @@ def pad_action_state_with_key(action_state: np.ndarray, action_key: str, single_
     if single_arm and "right" in action_key:
         action_state = np.zeros_like(action_state)
         return action_state, action_mask
-    # Set mask based on non-zero entries per sample
+    # Set mask per sample
     for i in range(num_samples):
-        if not np.all(action_state[i] == 0):
-            if action_dim <= max_length:
-                action_mask[i, :action_dim] = True
-            else:
-                action_mask[i, :] = True  # or handle truncation consistently
+        if action_dim <= max_length:
+            action_mask[i, :action_dim] = True
+        else:
+            action_mask[i, :] = True  # or handle truncation consistently
     return action_state, action_mask
 
 def calculate_dataset_statistics(parquet_paths: list[Path]) -> dict:
