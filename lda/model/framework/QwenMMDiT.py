@@ -209,7 +209,7 @@ class Qwen_MMDiT(baseframework):
         """
         if type(examples) is not list:
             examples = [examples]
-        curr_imgs = torch.from_numpy(np.array([example["image"] for example in examples]))
+        curr_imgs = torch.from_numpy(np.array([example["image"] for example in examples]).transpose(0, 1, 4, 2, 3))
         batch_images = [to_pil_preserve(example["image"]) for example in examples]  #  [B，[PLT]]
         instructions = [example["lang"] for example in examples]  # [B, str]
     
